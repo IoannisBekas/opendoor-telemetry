@@ -73,10 +73,27 @@ python -m opendoor_telemetry.cli ingest all
 
 ## Dashboard
 
-A published dark-mode dashboard renders the whole pipeline:
-<https://claude.ai/artifact/PHBeCbveyJT9anpJQyEBoT> (private until shared).
-Rebuild it from `dashboard/` — see [`dashboard/README.md`](dashboard/README.md).
-Every figure is read out of Postgres at build time; nothing is hand-entered.
+**Live: <https://ioannisbekas.github.io/opendoor-telemetry/>**
+
+Served by GitHub Pages from `docs/`. Rebuild it from `dashboard/` — see
+[`dashboard/README.md`](dashboard/README.md). Every figure is read out of
+Postgres at build time; nothing is hand-entered, so the page cannot drift from
+the data.
+
+The ambient background is a native canvas layer implementing Prompts B and C
+from [`docs/higgsfield_prompts.md`](docs/higgsfield_prompts.md) — no video
+service, no external asset. That document's §0 has measured contrast figures
+and the drop-in swap if you generate Higgsfield video later.
+
+### Publishing a refresh
+
+```bash
+PG_DSN=... python dashboard/export.py build/dash.json
+python dashboard/build.py dashboard/template.html build/dash.json docs/index.html
+git commit -am "refresh dashboard" && git push
+```
+
+Pages rebuilds in about 30 seconds.
 
 ---
 
