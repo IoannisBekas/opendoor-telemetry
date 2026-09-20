@@ -71,9 +71,20 @@ python -m opendoor_telemetry.cli ingest all
 
 ---
 
-## Dashboard
+## Dashboards
 
-**Live: <https://ioannisbekas.github.io/opendoor-telemetry/>**
+Two readings of identical data, from the same export:
+
+| | |
+| :--- | :--- |
+| **Dark operator view** | <https://ioannisbekas.github.io/opendoor-telemetry/> |
+| **Economist idiom, with explanations** | <https://ioannisbekas.github.io/opendoor-telemetry/economist/> |
+
+The second is written for a reader who follows markets but not iBuying: a
+"how to read this" note under every heading, hover definitions on each metric,
+a linked glossary, and a sentence explaining each number that looks odd. Its
+palette was re-derived from scratch for a light ground and re-validated —
+see [`docs/economist_palette.md`](docs/economist_palette.md).
 
 Served by GitHub Pages from `docs/`. Rebuild it from `dashboard/` — see
 [`dashboard/README.md`](dashboard/README.md). Every figure is read out of
@@ -90,7 +101,8 @@ and the drop-in swap if you generate Higgsfield video later.
 ```bash
 PG_DSN=... python dashboard/export.py build/dash.json
 python dashboard/build.py dashboard/template.html build/dash.json docs/index.html
-git commit -am "refresh dashboard" && git push
+python dashboard/build.py dashboard/economist_template.html build/dash.json docs/economist/index.html
+git commit -am "refresh dashboards" && git push
 ```
 
 Pages rebuilds in about 30 seconds.
@@ -175,6 +187,19 @@ Opendoor server-renders both a JSON-LD block and a `__NEXT_DATA__` payload
 into the HTML, carrying `daysOnMarket`, `listPrice`, `buyDirectPrice`,
 `listingState`, lat/lon and more with no JavaScript executed. The scraper is
 plain `httpx` plus a regex, which removes the Chromium dependency entirely.
+
+### The baseline was not national
+
+`v_msa_vs_peers` (formerly `v_msa_vs_national`) averages `months_of_supply`
+across `redfin_metro_metrics` — but `redfin_bulk.py` filters the bulk file down
+to the six target metros *before* loading, so that table never contains anything
+else. The average was therefore the **peer-group average of the Opendoor
+concentration markets**, published under the label "vs national".
+
+Both dashboards said "vs national" and both were wrong. The view, the export
+and both pages now say peer average. A genuine national baseline needs Redfin's
+national tracker ingested as a separate table and joined in; widening this
+average would not produce one.
 
 ### A sitemap URL bug worth knowing
 

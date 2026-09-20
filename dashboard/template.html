@@ -259,7 +259,7 @@ footer a{color:var(--muted)}
       <div class="tbl-wrap">
         <table id="t-msa">
           <thead><tr>
-            <th>Metro</th><th>Months of supply</th><th>vs national</th>
+            <th>Metro</th><th>Months of supply</th><th>vs peer avg</th>
             <th>Median DOM</th><th>Price cuts</th><th>Sale / list</th><th>Inventory</th>
           </tr></thead>
           <tbody></tbody>
@@ -313,6 +313,12 @@ const qlab = d => { const [y,m]=d.split("-"); return "Q"+(Math.floor((+m-1)/3)+1
 const mlab = d => { const [y,m]=d.split("-");
   return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m-1]+" '"+y.slice(2); };
 const shortMetro = r => r.replace(" metro area","");
+/* The exported baseline is the average of the six target metros, NOT a
+   national figure: redfin_bulk.py filters the bulk file to those regions
+   before loading, so an AVG() over the table is a peer-group comparator.
+   Accept either key name so older payloads still build. */
+const peerAvg   = m => m.mos_peer_avg      != null ? m.mos_peer_avg      : m.mos_national;
+const deltaPeer = m => m.delta_mos_vs_peer != null ? m.delta_mos_vs_peer : m.delta_mos;
 
 /* ---------------- tooltip ---------------- */
 const tip = $("#tip");
@@ -585,7 +591,7 @@ const ticks = (min,max,n,y0,y1) => Array.from({length:n+1},(_,i)=>{
     const tr = el("tr");
     tr.appendChild(el("td",null,'<div class="metro"><i class="stripe" style="background:'+sev(m)+'"></i>'+shortMetro(m.region)+'</div>'));
     [[m.months_of_supply.toFixed(2)],
-     [(m.delta_mos>=0?"+":"")+m.delta_mos.toFixed(2), m.delta_mos>0?"var(--warn)":"var(--muted)"],
+     [(deltaPeer(m)>=0?"+":"")+deltaPeer(m).toFixed(2), deltaPeer(m)>0?"var(--warn)":"var(--muted)"],
      [m.median_dom.toFixed(0)],
      [pct(m.price_drops,1)],
      [m.avg_sale_to_list.toFixed(3), m.avg_sale_to_list<0.98?"var(--warn)":null],
@@ -597,7 +603,7 @@ const ticks = (min,max,n,y0,y1) => Array.from({length:n+1},(_,i)=>{
   });
   const worst = D.msa[0];
   $("#msa-lede").textContent = "Rolling month ending " + D.msa_period +
-    ". Six Opendoor concentration metros (Redfin splits Dallas and Fort Worth) against the national baseline.";
+    ". Six Opendoor concentration metros (Redfin splits Dallas and Fort Worth), compared against their own average — a peer-group baseline, not a national one.";
 })();
 
 /* ---------------- MOS path ---------------- */
@@ -672,12 +678,12 @@ const ticks = (min,max,n,y0,y1) => Array.from({length:n+1},(_,i)=>{
   xa.textContent="Months of supply"; s.appendChild(xa);
 
   // national reference line
-  const natl = M[0].mos_national;
+  const natl = peerAvg(M[0]);
   if (natl >= xmin && natl <= xmax){
     s.appendChild(svg("line",{x1:X(natl),x2:X(natl),y1:y0,y2:y1,stroke:"var(--faint)",
       "stroke-width":1,"stroke-dasharray":"3 3"}));
     const t = svg("text",{x:X(natl),y:y0-3,"text-anchor":"middle",fill:"var(--faint)","font-size":10});
-    t.textContent="national"; s.appendChild(t);
+    t.textContent="6-metro avg"; s.appendChild(t);
   }
   const rmax = Math.max(...M.map(m=>m.inventory));
   // Four of these metros sit within 0.2 months of one another, so a label
@@ -703,7 +709,7 @@ const ticks = (min,max,n,y0,y1) => Array.from({length:n+1},(_,i)=>{
       fill:sevc, "fill-opacity":.42, stroke:sevc, "stroke-width":2});
     hoverable(c, "<b>"+shortMetro(m.region)+"</b>"+
       '<div class="r"><span>Months of supply</span><span class="num">'+m.months_of_supply.toFixed(2)+'</span></div>'+
-      '<div class="r"><span>vs national</span><span class="num">'+(m.delta_mos>=0?"+":"")+m.delta_mos.toFixed(2)+'</span></div>'+
+      '<div class="r"><span>vs peer avg</span><span class="num">'+(deltaPeer(m)>=0?"+":"")+deltaPeer(m).toFixed(2)+'</span></div>'+
       '<div class="r"><span>Price cuts</span><span class="num">'+pct(m.price_drops,1)+'</span></div>'+
       '<div class="r"><span>Median DOM</span><span class="num">'+m.median_dom.toFixed(0)+'</span></div>'+
       '<div class="r"><span>Active listings</span><span class="num">'+Math.round(m.inventory).toLocaleString()+'</span></div>');

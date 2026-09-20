@@ -1,0 +1,1094 @@
+<title>Opendoor, Read Cold</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* =====================================================================
+   Single-theme by intent. The Economist idiom is a printed-page one -
+   cream stock, ink, a red flag - and inverting it yields something that is
+   neither that nor the dark dashboard. No dark blocks; every colour is
+   painted explicitly so the page holds on any host ground.
+   Palette derivation and validation: docs/economist_palette.md
+   ===================================================================== */
+:root{
+  color-scheme: light;
+  --paper:#FDF9F0;
+  --ink:#121212;
+  --body:#2B2B2B;
+  --muted:#5B6B73;
+  --rule:#D8D2C6;
+  --rule-firm:#B8B0A4;
+  --red:#E3120B;
+
+  --s1:#006BA2;  --s2:#E3120B;  --s3:#2E7D32;  --s4:#7B4EA8;
+  --q1:#A9CBE0;  --q2:#6FA3C4;  --q3:#357FA8;  --q4:#00537F;
+
+  --sans:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--body);
+  font-family:var(--serif); font-size:17px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding-inline:16px; padding-block:0 72px}
+.num{font-variant-numeric:tabular-nums lining-nums; font-family:var(--sans)}
+
+/* ---------- masthead ---------- */
+.flag{width:64px; height:26px; background:var(--red); margin-bottom:18px}
+header.mast{padding-block:28px 0}
+h1{
+  font-family:var(--sans); font-weight:700; font-size:clamp(30px,5vw,46px);
+  line-height:1.06; letter-spacing:-.022em; color:var(--ink); margin:0 0 12px;
+  text-wrap:balance; max-width:20ch;
+}
+.standfirst{
+  font-size:19px; line-height:1.5; color:var(--body); margin:0 0 20px; max-width:62ch;
+}
+.byline{
+  font-family:var(--sans); font-size:12px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--muted); border-top:1px solid var(--rule-firm);
+  border-bottom:1px solid var(--rule-firm); padding:9px 0; margin-bottom:34px;
+  display:flex; gap:18px; flex-wrap:wrap;
+}
+
+/* ---------- sections ---------- */
+section{margin-top:54px}
+h2{
+  font-family:var(--sans); font-weight:600; font-size:25px; letter-spacing:-.018em;
+  color:var(--ink); margin:0 0 10px; text-wrap:balance;
+}
+.howto{
+  font-size:16.5px; line-height:1.6; color:var(--body); max-width:66ch;
+  border-left:3px solid var(--rule-firm); padding:2px 0 2px 16px; margin:0 0 26px;
+}
+.howto b{font-family:var(--sans); font-weight:600; font-size:12px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  display:block; margin-bottom:4px}
+
+/* ---------- figure: the Economist chart block ---------- */
+/* red rule, title, deck, plot, source - in that order, always left-aligned */
+figure{margin:0 0 34px}
+.fig-rule{width:34px; height:4px; background:var(--red); margin-bottom:10px}
+.fig-t{font-family:var(--sans); font-weight:600; font-size:17.5px;
+  color:var(--ink); margin:0 0 3px; letter-spacing:-.012em}
+.fig-d{font-family:var(--sans); font-weight:400; font-size:13.5px;
+  color:var(--muted); margin:0 0 14px; max-width:62ch; line-height:1.45}
+figcaption{font-family:var(--sans); font-size:11.5px; color:var(--muted);
+  margin-top:9px; line-height:1.45}
+figcaption .prov{
+  display:inline-block; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+  border:1px solid var(--rule-firm); border-radius:2px; padding:2px 5px;
+  margin-right:8px; color:var(--muted);
+}
+.chart{width:100%; height:auto; display:block; overflow:visible}
+/* Chart furniture is set in the sans face, as it is in the printed original;
+   without this, SVG text inherits the serif body face. */
+.chart text{font-family:var(--sans)}
+
+.cols{display:grid; grid-template-columns:1fr 1fr; gap:34px 40px}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+
+/* ---------- indicator table (replaces the glass KPI tiles) ---------- */
+.ind{width:100%; border-collapse:collapse; margin-bottom:8px}
+.ind th{
+  font-family:var(--sans); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; text-align:right; padding:0 0 8px 20px;
+  border-bottom:1px solid var(--rule-firm);
+}
+.ind th:first-child,.ind td:first-child{text-align:left; padding-left:0}
+.ind td{padding:13px 0 13px 20px; border-bottom:1px solid var(--rule); text-align:right;
+  font-family:var(--sans); font-size:15px}
+.ind tr:last-child td{border-bottom:1px solid var(--rule-firm)}
+.ind .big{font-size:23px; font-weight:600; color:var(--ink); letter-spacing:-.02em}
+.ind .lab{font-family:var(--sans); font-size:14.5px; color:var(--body)}
+.ind .ctx{font-family:var(--sans); font-size:13px; color:var(--muted)}
+
+/* ---------- data tables ---------- */
+.tw{overflow-x:auto}
+table.data{border-collapse:collapse; width:100%; min-width:600px;
+  font-family:var(--sans); font-size:14px}
+table.data th{
+  font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted);
+  font-weight:600; text-align:right; padding:0 0 8px; border-bottom:1px solid var(--rule-firm);
+}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{padding:9px 0; border-bottom:1px solid var(--rule); text-align:right}
+table.data tbody tr:last-child td{border-bottom:1px solid var(--rule-firm)}
+table.data .hi{color:var(--red); font-weight:600}
+
+/* ---------- defined terms ---------- */
+/* dotted underline marks a term that carries a definition; never colour alone */
+.dfn{
+  border-bottom:1px dotted var(--muted); cursor:help; text-decoration:none;
+  color:inherit;
+}
+.dfn:hover,.dfn:focus{background:rgba(227,18,11,.07); outline:none}
+
+.tip{
+  position:fixed; z-index:60; opacity:0; pointer-events:none; transition:opacity .1s;
+  background:var(--ink); color:#F7F4EE; border-radius:3px; padding:9px 11px;
+  font-family:var(--sans); font-size:12.5px; line-height:1.45; max-width:290px;
+  box-shadow:0 6px 22px rgba(18,18,18,.22);
+}
+.tip b{display:block; margin-bottom:3px; font-size:13px; color:#fff}
+.tip .r{display:flex; justify-content:space-between; gap:16px; color:#C9C3B8}
+.tip .r span:last-child{color:#fff}
+
+/* ---------- annotation: why a number is surprising ---------- */
+.why{
+  font-size:16px; line-height:1.6; max-width:64ch; margin:20px 0 0;
+  padding-left:16px; border-left:3px solid var(--red);
+}
+.why b{font-family:var(--sans); font-weight:600; color:var(--ink)}
+
+/* ---------- glossary ---------- */
+#glossary dl{display:grid; grid-template-columns:minmax(150px,220px) 1fr;
+  gap:0; margin:0; border-top:1px solid var(--rule-firm)}
+#glossary dt{font-family:var(--sans); font-weight:600; font-size:14.5px; color:var(--ink);
+  padding:13px 16px 13px 0; border-bottom:1px solid var(--rule)}
+#glossary dd{margin:0; padding:13px 0; border-bottom:1px solid var(--rule);
+  font-size:16px; line-height:1.55}
+#glossary dt:target{color:var(--red)}
+@media (max-width:640px){
+  #glossary dl{grid-template-columns:1fr}
+  #glossary dt{padding-bottom:2px; border-bottom:0}
+}
+
+footer{margin-top:60px; padding-top:22px; border-top:2px solid var(--ink);
+  font-size:14.5px; color:var(--muted); line-height:1.6}
+footer a{color:var(--muted)}
+.footgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  gap:18px; margin-top:16px; font-family:var(--sans); font-size:13px}
+.footgrid b{display:block; font-size:11px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--ink); margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="flag" aria-hidden="true"></div>
+    <h1>An iBuyer, read cold</h1>
+    <p class="standfirst">Opendoor buys houses with borrowed money and hopes to sell them
+    before the interest eats the margin. Everything below is drawn from public filings and
+    public market data &mdash; no paid terminal, no vendor feed.</p>
+    <div class="byline">
+      <span id="b-fin"></span><span id="b-mkt"></span><span id="b-inv"></span>
+    </div>
+  </header>
+
+  <section id="s-ind">
+    <h2>Where the balance sheet stands</h2>
+    <div class="howto"><b>How to read this</b>
+    Opendoor is not a broker taking a fee. It buys the house outright, holds it, and resells
+    it, so its balance sheet <em>is</em> its business. Three numbers govern it: how much
+    property it owns, how much it borrowed to buy that property, and how much room is left
+    to borrow more. Everything else is downstream of those.</div>
+    <div class="tw"><table class="ind" id="t-ind">
+      <thead><tr><th>Indicator</th><th>Latest</th><th>Prior quarter</th><th>Context</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <figcaption><span class="prov">SEC EDGAR XBRL</span><span id="ind-src"></span></figcaption>
+    <p class="why" id="why-inv"></p>
+  </section>
+
+  <section id="s-fac">
+    <h2>What the money costs</h2>
+    <div class="howto"><b>How to read this</b>
+    The company borrows through a ladder of separate
+    <a class="dfn" href="#g-facility" data-t="facility">credit facilities</a>, each with its
+    own ceiling and its own interest rate. Bars show how much of each ceiling is drawn. The
+    figure on the right is the rate that facility charges. Cheap
+    <a class="dfn" href="#g-senior" data-t="senior">senior</a> paper and expensive
+    <a class="dfn" href="#g-mezz" data-t="mezz">mezzanine</a> paper sit in the same stack,
+    so the mix &mdash; not the headline rate &mdash; sets the true cost of funds.</div>
+    <figure>
+      <div class="fig-rule"></div>
+      <p class="fig-t">The ladder</p>
+      <p class="fig-d">Drawn balance as a share of each facility&rsquo;s ceiling, with the
+      weighted-average rate it charges. Bars are scaled to each facility&rsquo;s own ceiling.</p>
+      <div id="ladder"></div>
+      <figcaption><span class="prov">EDGAR footnote R-file</span>None of this appears in
+      XBRL. It is parsed from the rendered debt footnote of each filing.</figcaption>
+    </figure>
+    <div class="cols">
+      <figure>
+        <div class="fig-rule"></div>
+        <p class="fig-t">Blended cost of funds</p>
+        <p class="fig-d">Drawn-weighted average across every facility carrying a balance.</p>
+        <div id="cof"></div>
+        <figcaption><span class="prov">EDGAR footnote R-file</span>Weighted by drawn balance,
+        not by ceiling.</figcaption>
+      </figure>
+      <figure>
+        <div class="fig-rule"></div>
+        <p class="fig-t">Senior against mezzanine</p>
+        <p class="fig-d">Drawn balance and average rate, by tier.</p>
+        <svg class="chart" id="c-tier" viewBox="0 0 420 190" role="img"
+             aria-label="Drawn balance and average rate by debt tier"></svg>
+        <figcaption><span class="prov">EDGAR footnote R-file</span>Bars are drawn balance;
+        figures are the tier&rsquo;s weighted-average rate.</figcaption>
+      </figure>
+    </div>
+    <p class="why" id="why-mezz"></p>
+  </section>
+
+  <section id="s-bb">
+    <h2>Borrowing, and the room left to borrow</h2>
+    <div class="howto"><b>How to read this</b>
+    Two charts, not one. The first is money: the ceiling across all facilities against the
+    amount actually drawn. The second is the same story as a percentage &mdash;
+    <a class="dfn" href="#g-util" data-t="util">utilisation</a>. They are shown separately
+    because stacking a currency scale and a percentage scale on one pair of axes invites the
+    reader to compare two things that share no units.</div>
+    <div class="cols">
+      <figure>
+        <div class="fig-rule"></div>
+        <p class="fig-t">Ceiling and draw</p>
+        <p class="fig-d">Total facility capacity and drawn balance, $bn, by quarter.</p>
+        <svg class="chart" id="c-bb" viewBox="0 0 440 260" role="img"
+             aria-label="Facility capacity and drawn balance by quarter"></svg>
+        <figcaption><span class="prov">EDGAR footnote R-file</span>Capacity is the dotted
+        line; draw is the columns.</figcaption>
+      </figure>
+      <figure>
+        <div class="fig-rule"></div>
+        <p class="fig-t">Utilisation</p>
+        <p class="fig-d">Drawn balance as a percentage of total capacity, by quarter.</p>
+        <svg class="chart" id="c-util" viewBox="0 0 440 260" role="img"
+             aria-label="Facility utilisation by quarter"></svg>
+        <figcaption><span class="prov">EDGAR footnote R-file</span>Same data as the chart at
+        left, expressed as a share.</figcaption>
+      </figure>
+    </div>
+    <p class="why" id="why-util"></p>
+  </section>
+
+  <section id="s-bs">
+    <h2>Inventory against leverage</h2>
+    <div class="howto"><b>How to read this</b>
+    Three lines on one currency scale: the property Opendoor owns, the debt secured against
+    it, and the cash it holds free of any lien. When the inventory line and the debt line
+    move together, the company is buying on credit. When they diverge, it is either selling
+    down or funding purchases from its own pocket.</div>
+    <figure>
+      <div class="fig-rule"></div>
+      <p class="fig-t">Twenty-four quarters</p>
+      <p class="fig-d">Real-estate inventory, asset-backed debt and unrestricted cash, $bn.</p>
+      <svg class="chart" id="c-bs" viewBox="0 0 900 330" role="img"
+           aria-label="Inventory, asset-backed debt and unrestricted cash by quarter"></svg>
+      <figcaption><span class="prov">SEC EDGAR XBRL</span>Series labelled at the right-hand
+      end. Quarters without a reported inventory figure are omitted.</figcaption>
+    </figure>
+  </section>
+
+  <section id="s-msa">
+    <h2>How fast the houses clear</h2>
+    <div class="howto"><b>How to read this</b>
+    Opendoor&rsquo;s risk is concentrated in a handful of Sunbelt metros.
+    <a class="dfn" href="#g-mos" data-t="mos">Months of supply</a> is the headline measure of
+    how long the local market would take to absorb its listings. Under four months favours
+    sellers; over six favours buyers and squeezes anyone holding stock.
+    <a class="dfn" href="#g-slr" data-t="slr">Sale-to-list</a> below 0.98 means asking prices
+    have gone stale.</div>
+    <figure>
+      <div class="fig-rule"></div>
+      <p class="fig-t">Six metros, one month</p>
+      <p class="fig-d">Market conditions in the metros where Opendoor&rsquo;s inventory sits.
+      Redfin reports Dallas and Fort Worth separately.</p>
+      <div class="tw"><table class="data" id="t-msa">
+        <thead><tr>
+          <th>Metro</th><th>Months of supply</th><th>vs peer avg</th><th>Median DOM</th>
+          <th>Listings cutting price</th><th>Sale to list</th><th>Active listings</th>
+        </tr></thead><tbody></tbody>
+      </table></div>
+      <figcaption><span class="prov">Redfin Data Center</span><span id="msa-src"></span></figcaption>
+    </figure>
+    <p class="why" id="why-phx"></p>
+
+    <figure style="margin-top:34px">
+      <div class="fig-rule"></div>
+      <p class="fig-t">Three years, metro by metro</p>
+      <p class="fig-d">Months of supply. Each panel carries the same scale, so panels can be
+      compared directly. The grey line is the average across these six metros, not a national figure.</p>
+      <div id="smallmult"></div>
+      <figcaption><span class="prov">Redfin Data Center</span>Small multiples rather than
+      seven lines on one axis, which would be unreadable.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="fig-rule"></div>
+      <p class="fig-t">Slow and discounted</p>
+      <p class="fig-d">Months of supply against the share of listings that have cut price.
+      Circle area is the number of active listings.</p>
+      <svg class="chart" id="c-risk" viewBox="0 0 560 320" role="img"
+           aria-label="Months of supply against price-cut share by metro"></svg>
+      <figcaption><span class="prov">Redfin Data Center</span>Up and to the right is the
+      uncomfortable corner: slow clearance and deep discounting together.</figcaption>
+    </figure>
+  </section>
+
+  <section id="s-inv"></section>
+
+  <section id="glossary">
+    <h2>Terms</h2>
+    <div class="howto"><b>How to read this</b>
+    Every dotted term above links here. Definitions are written for a reader who follows
+    markets but has no reason to know the plumbing of residential iBuying.</div>
+    <dl id="gloss-list"></dl>
+  </section>
+
+  <footer>
+    <strong style="color:var(--ink)">Sources and method.</strong>
+    Every figure on this page is machine-extracted from a free public source. No paid data
+    vendor, no terminal. The same pipeline feeds the dark-themed version of this dashboard at
+    <a href="../">the site root</a>; this is a second reading of identical data, not a
+    different dataset.
+    <div class="footgrid">
+      <div><b>Financials</b>SEC EDGAR XBRL companyfacts API, CIK 1801169. Tags resolve through
+      fallback chains because Opendoor changed its tag usage after 2021.</div>
+      <div><b>Facility detail</b>Rendered debt-footnote tables, located through each
+      filing&rsquo;s FilingSummary.xml. Report numbering shifts between filings, so reports are
+      matched by name.</div>
+      <div><b>Market data</b>Redfin Data Center public bulk TSV, filtered to the six Opendoor
+      concentration metros plus a national baseline.</div>
+      <div><b>Inventory</b>Opendoor&rsquo;s published sitemap and the structured data embedded
+      in each listing page, fetched at one request per second.</div>
+    </div>
+    <p id="foot-note" style="margin-top:18px"></p>
+  </footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const svg = (t,a={}) => { const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; };
+const el = (t,c,h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+
+const usd = v => v==null ? "—" : (Math.abs(v)>=1e9 ? "$"+(v/1e9).toFixed(2)+"bn"
+              : Math.abs(v)>=1e6 ? "$"+(v/1e6).toFixed(0)+"m" : "$"+Math.round(v).toLocaleString());
+const bn  = v => v==null ? "—" : (v/1e9).toFixed(1);
+const pct = (v,d=1) => v==null ? "—" : (v*100).toFixed(d)+"%";
+const qlab = d => { const [y,m]=d.split("-"); return "Q"+(Math.floor((+m-1)/3)+1)+" "+y.slice(2); };
+const mlab = d => { const [y,m]=d.split("-");
+  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m-1]+" "+y.slice(2); };
+const shortMetro = r => r.replace(" metro area","").split(",")[0];
+/* Export key names changed when the mislabelled "national" baseline was
+   corrected to a peer average; accept either so older payloads still build. */
+const peerAvg  = m => m.mos_peer_avg      != null ? m.mos_peer_avg      : m.mos_national;
+const deltaPeer= m => m.delta_mos_vs_peer != null ? m.delta_mos_vs_peer : m.delta_mos;
+
+/* ---------------- glossary + term tooltips ---------------- */
+const GLOSS = {
+  ibuyer:   ["iBuyer", "A company that buys homes directly from sellers for cash, using its own balance sheet, then relists them. It earns a spread between purchase and resale rather than a broker’s commission — and carries the price risk in between."],
+  facility: ["Credit facility", "A standing arrangement with lenders to borrow up to an agreed ceiling. Opendoor runs many in parallel, each secured against a pool of houses, each with its own ceiling, maturity and rate."],
+  borrowbase:["Borrowing base", "The maximum a lender will advance, calculated from the appraised value of the pledged homes after haircuts that grow as a house ages in inventory. It is not a fixed number: let houses sit, and the base shrinks even if the ceiling does not."],
+  senior:   ["Senior debt", "The first claim on the pledged assets. Lowest risk to the lender, so the cheapest rate to the borrower. Paid out first if anything goes wrong."],
+  mezz:     ["Mezzanine debt", "Ranks behind senior debt in a default. The lender takes more risk and charges far more for it — here, roughly double the senior rate."],
+  nonrecourse:["Non-recourse", "Debt secured only against a specific pool of houses held in a separate subsidiary. If that pool fails, lenders take the houses; they cannot pursue the parent company’s other assets."],
+  util:     ["Utilisation", "Drawn balance as a percentage of the ceiling. Low utilisation means capacity to buy more houses; high utilisation means the company is near its borrowing limit."],
+  headroom: ["Headroom", "The ceiling minus what is already drawn — the money still available to borrow."],
+  mos:      ["Months of supply", "Active listings divided by the monthly rate of sales. It answers: at today’s pace, how long to sell everything currently listed? Under four months is a seller’s market; over six is a buyer’s."],
+  dom:      ["Days on market", "How long a listing has been advertised without going under contract. For an iBuyer every additional day accrues interest, taxes, insurance and maintenance against a fixed expected sale price."],
+  slr:      ["Sale-to-list ratio", "Final sale price divided by final asking price. Below 0.98 suggests asking prices are stale and sellers are conceding at the table."],
+  cut:      ["Price cut share", "The proportion of active listings that have reduced their asking price at least once. A direct read on how much of the market is failing to clear at its first price."],
+  contrib:  ["Contribution margin", "What a house earns after every cost attributable to it — purchase price, renovation, holding costs, interest and selling fees. The measure that decides whether a transaction was worth doing."],
+  tnw:      ["Tangible net worth", "Shareholders’ equity less goodwill and intangible assets. Lenders write minimum levels of it into facility covenants, so it is a solvency tripwire, not just an accounting figure."],
+  convert:  ["Convertible notes", "Bonds the holder may swap for shares. Until converted they are debt and must be repaid; once inside twelve months of maturity they become a near-term call on cash."],
+  spe:      ["Special purpose entity", "A bankruptcy-remote subsidiary that holds a pool of houses and borrows against them, ring-fencing that debt from the parent."],
+  cof:      ["Blended cost of funds", "The average interest rate across all borrowings, weighted by how much is drawn on each. The hurdle every inventory dollar must clear before a day of holding is worth taking."],
+  xbrl:     ["XBRL", "The machine-readable tagging standard that public companies must apply to their financial statements, which is what makes the SEC’s free API usable without a data vendor."],
+  writedown:["Inventory write-down", "An accounting charge taken when a house is worth less than its carrying value. Homes held beyond ninety days carry materially more of this risk."],
+};
+const GKEY = {facility:"g-facility", senior:"g-senior", mezz:"g-mezz", util:"g-util",
+  mos:"g-mos", slr:"g-slr", dom:"g-dom", cut:"g-cut", borrowbase:"g-borrowbase",
+  headroom:"g-headroom", contrib:"g-contrib", tnw:"g-tnw", convert:"g-convert",
+  spe:"g-spe", cof:"g-cof", xbrl:"g-xbrl", ibuyer:"g-ibuyer",
+  nonrecourse:"g-nonrecourse", writedown:"g-writedown"};
+
+const gl = $("#gloss-list");
+Object.keys(GLOSS).forEach(k=>{
+  const [term, def] = GLOSS[k];
+  const dt = el("dt", null, term); dt.id = GKEY[k] || ("g-"+k);
+  gl.appendChild(dt); gl.appendChild(el("dd", null, def));
+});
+
+const tip = $("#tip");
+function showTip(e, html){
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 16;
+  if (x + r.width  > innerWidth  - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 16;
+  tip.style.left = Math.max(8,x)+"px"; tip.style.top = Math.max(8,y)+"px";
+}
+const hideTip = () => tip.style.opacity = 0;
+function hoverable(node, html){
+  node.addEventListener("mousemove", e => showTip(e, html));
+  node.addEventListener("mouseleave", hideTip);
+}
+function wireTerms(root){
+  (root||document).querySelectorAll(".dfn[data-t]").forEach(a=>{
+    const g = GLOSS[a.dataset.t];
+    if (!g) return;
+    hoverable(a, "<b>"+g[0]+"</b>"+g[1]);
+    a.addEventListener("focus", ()=>{
+      const r=a.getBoundingClientRect();
+      showTip({clientX:r.left, clientY:r.bottom}, "<b>"+g[0]+"</b>"+g[1]);
+    });
+    a.addEventListener("blur", hideTip);
+    a.setAttribute("tabindex","0");
+  });
+}
+addEventListener("scroll", hideTip, {passive:true});
+
+/* ---------------- shared chart furniture ---------------- */
+/* Economist convention: horizontal gridlines only, no chart border, no y axis
+   line, y labels on the right for time series, a firmer zero line. */
+function hgrid(s, x0, x1, tks, fmt, side){
+  tks.forEach(t=>{
+    const zero = Math.abs(t.v) < 1e-9;
+    s.appendChild(svg("line",{x1:x0, x2:x1, y1:t.y, y2:t.y,
+      stroke: zero ? "var(--rule-firm)" : "var(--rule)", "stroke-width": zero ? 1.25 : 1}));
+    const right = side !== "left";
+    const tx = svg("text",{x: right ? x1+7 : x0-8, y:t.y+4,
+      "text-anchor": right ? "start" : "end", fill:"var(--muted)", "font-size":11.5});
+    tx.setAttribute("class","num"); tx.textContent = fmt(t.v); s.appendChild(tx);
+  });
+}
+function xlabels(s, items, y){
+  items.forEach(l=>{
+    const tx = svg("text",{x:l.x, y:y, "text-anchor":"middle", fill:"var(--muted)", "font-size":11.5});
+    tx.setAttribute("class","num"); tx.textContent = l.t; s.appendChild(tx);
+  });
+}
+const ticks = (min,max,n,y0,y1) => Array.from({length:n+1},(_,i)=>{
+  const v = min + (max-min)*i/n; return {v, y: y1 - (v-min)/(max-min)*(y1-y0)};
+});
+
+/* ---------------- byline ---------------- */
+const bs = D.balance_sheet, last = bs[bs.length-1], prev = bs[bs.length-2];
+$("#b-fin").textContent = "Financials to " + last.period_end;
+$("#b-mkt").textContent = "Market data to " + D.msa_period;
+$("#b-inv").textContent = "Inventory swept " + D.as_of;
+
+/* ---------------- indicator table ---------------- */
+const facs = D.facilities, total = facs.find(f=>f.facility_name==="TOTAL");
+const drawnRated = facs.filter(f=>f.wtd_avg_rate!=null && f.drawn>0);
+const drawnSum = drawnRated.reduce((a,f)=>a+f.drawn,0);
+const blended = drawnRated.reduce((a,f)=>a+f.drawn*f.wtd_avg_rate,0)/(drawnSum||1);
+const invDelta = (last.inventory_real_estate - prev.inventory_real_estate)/prev.inventory_real_estate;
+
+const IND = [
+  ["Real-estate inventory", usd(last.inventory_real_estate), usd(prev.inventory_real_estate),
+   (invDelta>=0?"+":"")+pct(invDelta,0)+" on the quarter", null],
+  ["Asset-backed debt", usd(last.abs_debt_total), usd(prev.abs_debt_total),
+   last.debt_to_inventory.toFixed(2)+"× inventory", "nonrecourse"],
+  ["Undrawn headroom", usd(total.headroom), null,
+   pct(total.utilization,1)+" of "+usd(total.capacity)+" drawn", "headroom"],
+  ["Blended cost of funds", pct(blended,2), null,
+   drawnRated.length+" facilities carrying a balance", "cof"],
+  ["Unrestricted cash", usd(last.cash_unrestricted), usd(prev.cash_unrestricted),
+   usd(last.cash_restricted)+" more is restricted", null],
+  ["Convertibles due within a year", usd(last.convertible_current), null,
+   last.liquid_cover_of_current_converts.toFixed(1)+"× covered by cash", "convert"],
+  ["Tangible net worth", usd(last.tangible_net_worth), usd(prev.tangible_net_worth),
+   "covenant floor measure", "tnw"],
+];
+const tb = $("#t-ind tbody");
+IND.forEach(([lab,v,p,ctx,term])=>{
+  const tr = el("tr");
+  const nm = term
+    ? '<a class="dfn" href="#'+(GKEY[term]||("g-"+term))+'" data-t="'+term+'">'+lab+'</a>'
+    : lab;
+  tr.appendChild(el("td","lab", nm));
+  tr.appendChild(el("td","big num", v));
+  tr.appendChild(el("td","num", p==null ? "—" : p));
+  tr.appendChild(el("td","ctx", ctx));
+  tb.appendChild(tr);
+});
+$("#ind-src").textContent = "Balance-sheet items as reported in the 10-Q for the quarter ended "
+  + last.period_end + ". Prior quarter is " + prev.period_end + ".";
+
+$("#why-inv").innerHTML = "<b>Why the inventory line jumps.</b> Real-estate inventory rose "
+  + pct(invDelta,0) + " in a single quarter, from " + usd(prev.inventory_real_estate) + " to "
+  + usd(last.inventory_real_estate) + ". That is not drift; it is a decision. Drawn debt rose "
+  + "in step, from " + usd(prev.abs_debt_total) + " to " + usd(last.abs_debt_total)
+  + ", so the buying was funded on the credit lines rather than out of cash — cash in fact "
+  + "fell over the same quarter. After roughly eighteen months of shrinking the book, Opendoor "
+  + "has started buying again, on borrowed money.";
+
+wireTerms($("#s-ind"));
+
+/* ---------------- facility ladder ---------------- */
+(function(){
+  const host = $("#ladder");
+  const rows = facs.filter(f=>f.facility_name!=="TOTAL" && f.capacity);
+  const groups = {};
+  rows.forEach(f=>{ const g=f.facility_group||"Programme totals"; (groups[g]=groups[g]||[]).push(f); });
+  const order = Object.keys(groups).sort((a,b)=>
+    a==="Programme totals"?-1:b==="Programme totals"?1:a.localeCompare(b));
+
+  const W=860, RH=26, PAD=8;
+  const nRows = rows.length + order.length;
+  const H = nRows*RH + 34;
+  const s = svg("svg",{viewBox:"0 0 "+W+" "+H, class:"chart", role:"img",
+    "aria-label":"Drawn share of each credit facility, with its interest rate"});
+  const LX = 292, BX0 = LX+12, BX1 = W-150;
+
+  // header
+  const hd = svg("text",{x:BX1+8, y:12, "text-anchor":"start", fill:"var(--muted)","font-size":11});
+  hd.setAttribute("class","num"); hd.textContent="CEILING"; s.appendChild(hd);
+  const hr = svg("text",{x:W-4, y:12, "text-anchor":"end", fill:"var(--muted)","font-size":11});
+  hr.setAttribute("class","num"); hr.textContent="RATE"; s.appendChild(hr);
+  s.appendChild(svg("line",{x1:0,x2:W,y1:18,y2:18,stroke:"var(--rule-firm)","stroke-width":1}));
+
+  let y = 18 + 20;
+  order.forEach(g=>{
+    const gt = svg("text",{x:0, y:y+4, fill:"var(--muted)", "font-size":10.5,
+      "letter-spacing":"0.08em"});
+    gt.setAttribute("class","num"); gt.textContent = g.toUpperCase(); s.appendChild(gt);
+    y += RH;
+    groups[g].sort((a,b)=>(b.capacity||0)-(a.capacity||0)).forEach(f=>{
+      const util = f.utilization||0;
+      const isMezz = /mezzanine/i.test(f.facility_group||"") || (f.wtd_avg_rate||0)>=0.10;
+      const col = isMezz ? "var(--s2)" : "var(--s1)";
+
+      const nm = svg("text",{x:0, y:y+4, fill:"var(--ink)", "font-size":12});
+      nm.textContent = f.facility_name; s.appendChild(nm);
+
+      s.appendChild(svg("rect",{x:BX0, y:y-7, width:BX1-BX0, height:14,
+        fill:"#EFE9DC"}));
+      if (util>0) s.appendChild(svg("rect",{x:BX0, y:y-7, width:Math.max((BX1-BX0)*util,2),
+        height:14, fill:col}));
+
+      const cap = svg("text",{x:BX1+8, y:y+4, "text-anchor":"start", fill:"var(--muted)","font-size":12});
+      cap.setAttribute("class","num"); cap.textContent = usd(f.capacity); s.appendChild(cap);
+
+      const rt = svg("text",{x:W-4, y:y+4, "text-anchor":"end",
+        fill: f.wtd_avg_rate>=0.10 ? "var(--s2)" : (f.wtd_avg_rate>0 ? "var(--ink)" : "var(--muted)"),
+        "font-size":12, "font-weight": f.wtd_avg_rate>=0.10 ? 600 : 400});
+      rt.setAttribute("class","num");
+      rt.textContent = f.wtd_avg_rate!=null ? pct(f.wtd_avg_rate,2) : "—";
+      s.appendChild(rt);
+
+      const hit = svg("rect",{x:0,y:y-13,width:W,height:RH,fill:"transparent"});
+      hoverable(hit, "<b>"+f.facility_name+"</b>"+
+        '<div class="r"><span>Ceiling</span><span>'+usd(f.capacity)+'</span></div>'+
+        '<div class="r"><span>Drawn</span><span>'+usd(f.drawn)+'</span></div>'+
+        '<div class="r"><span>Headroom</span><span>'+usd(f.headroom)+'</span></div>'+
+        '<div class="r"><span>Utilisation</span><span>'+pct(util,1)+'</span></div>'+
+        (f.wtd_avg_rate!=null?'<div class="r"><span>Rate</span><span>'+pct(f.wtd_avg_rate,2)+'</span></div>':""));
+      s.appendChild(hit);
+      y += RH;
+    });
+  });
+  host.appendChild(s);
+})();
+
+/* ---------------- cost of funds + tiers ---------------- */
+(function(){
+  const senior = drawnRated.filter(f=>f.wtd_avg_rate<.10);
+  const mezz   = drawnRated.filter(f=>f.wtd_avg_rate>=.10);
+  const wavg = a => a.reduce((s,f)=>s+f.drawn*f.wtd_avg_rate,0)/(a.reduce((s,f)=>s+f.drawn,0)||1);
+  const sD = senior.reduce((a,f)=>a+f.drawn,0), mD = mezz.reduce((a,f)=>a+f.drawn,0);
+
+  $("#cof").innerHTML =
+    '<div class="num" style="font-size:58px;font-weight:700;letter-spacing:-.035em;'
+    +'line-height:1;color:var(--ink)">'+pct(blended,2)+'</div>'
+    +'<p style="font-size:16px;line-height:1.55;margin:12px 0 0;max-width:46ch">Across '
+    + usd(drawnSum) + ' of drawn balance. Every dollar of inventory has to earn more than '
+    + 'this, annualised over however long the house sits, before holding it is worth doing.</p>';
+
+  const s = $("#c-tier");
+  const rows = [
+    {n:"Senior", d:sD, r:wavg(senior), c:"var(--s1)", k:senior.length},
+    {n:"Mezzanine", d:mD, r:wavg(mezz), c:"var(--s2)", k:mezz.length},
+  ];
+  const max = Math.max(...rows.map(r=>r.d))*1.02;
+  const x0=0, x1=300, rowH=68;
+  rows.forEach((r,i)=>{
+    const y = 26 + i*rowH;
+    const nm = svg("text",{x:0,y:y-8,fill:"var(--ink)","font-size":13.5}); nm.textContent=r.n;
+    s.appendChild(nm);
+    const sub = svg("text",{x:0,y:y+34,fill:"var(--muted)","font-size":11.5});
+    sub.setAttribute("class","num");
+    sub.textContent = usd(r.d)+" drawn · "+r.k+" facilities"; s.appendChild(sub);
+    s.appendChild(svg("rect",{x:x0,y:y,width:(x1-x0)*(r.d/max),height:20,fill:r.c}));
+    const rt = svg("text",{x:x1+14,y:y+15,fill:r.c,"font-size":19,"font-weight":700});
+    rt.setAttribute("class","num"); rt.textContent = pct(r.r,2); s.appendChild(rt);
+  });
+  const ratio = (wavg(mezz)/wavg(senior));
+  $("#why-mezz").innerHTML = "<b>Why the mezzanine rate matters more than it looks.</b> "
+    + "Mezzanine paper costs " + ratio.toFixed(1) + " times the senior rate — "
+    + pct(wavg(mezz),2) + " against " + pct(wavg(senior),2) + " — because those lenders "
+    + "rank behind the senior ones if anything goes wrong. It is only " + pct(mD/(sD+mD),0)
+    + " of the drawn balance, but it is the single biggest swing factor in the blended rate. "
+    + "Shift the mix toward mezzanine and the hurdle every house must clear rises with it.";
+})();
+
+/* ---------------- borrowing base: two charts, one scale each ---------------- */
+(function(){
+  const H = D.facility_history;
+  const X = (i,x0,x1) => x0 + i*(x1-x0)/(H.length-1);
+  const xs = H.map((d,i)=>({i, t:qlab(d.period_end)})).filter(o=>o.i%3===0);
+
+  // --- money ---
+  (function(){
+    const s = $("#c-bb"), x0=8,y0=16,x1=386,y1=214;
+    const max = Math.max(...H.map(d=>d.capacity))*1.06;
+    const Y = v => y1 - v/max*(y1-y0);
+    hgrid(s,x0,x1, ticks(0,max,4,y0,y1), v=>(v/1e9).toFixed(0));
+    const unit = svg("text",{x:x1+7,y:y0-4,"text-anchor":"start",fill:"var(--muted)","font-size":11});
+    unit.textContent="$bn"; s.appendChild(unit);
+
+    let p="";
+    H.forEach((d,i)=> p += (i?"L":"M")+X(i,x0,x1)+","+Y(d.capacity));
+    s.appendChild(svg("path",{d:p,fill:"none",stroke:"var(--ink)","stroke-width":1.4,
+      "stroke-dasharray":"5 3"}));
+
+    const bw = Math.min(22,(x1-x0)/H.length - 6);
+    H.forEach((d,i)=>{
+      const r = svg("rect",{x:X(i,x0,x1)-bw/2, y:Y(d.drawn), width:bw,
+        height:Math.max(y1-Y(d.drawn),1.5), fill:"var(--s1)"});
+      hoverable(r, "<b>"+qlab(d.period_end)+"</b>"+
+        '<div class="r"><span>Ceiling</span><span>'+usd(d.capacity)+'</span></div>'+
+        '<div class="r"><span>Drawn</span><span>'+usd(d.drawn)+'</span></div>'+
+        '<div class="r"><span>Headroom</span><span>'+usd(d.headroom)+'</span></div>');
+      s.appendChild(r);
+    });
+    xlabels(s, xs.map(o=>({x:X(o.i,x0,x1), t:o.t})), y1+19);
+    const lastC = H[H.length-1].capacity;
+    const lc = svg("text",{x:X(H.length-1,x0,x1), y:Y(lastC)-9, "text-anchor":"end",
+      fill:"var(--ink)","font-size":11.5});
+    lc.textContent="Ceiling"; s.appendChild(lc);
+    const ld = svg("text",{x:X(H.length-1,x0,x1), y:Y(H[H.length-1].drawn)-8,
+      "text-anchor":"end", fill:"var(--s1)","font-size":11.5,"font-weight":600});
+    ld.textContent="Drawn"; s.appendChild(ld);
+  })();
+
+  // --- utilisation, its own chart and its own scale ---
+  (function(){
+    const s = $("#c-util"), x0=8,y0=16,x1=386,y1=214;
+    const max = 0.40;
+    const Y = v => y1 - v/max*(y1-y0);
+    hgrid(s,x0,x1, ticks(0,max,4,y0,y1), v=>(v*100).toFixed(0));
+    const unit = svg("text",{x:x1+7,y:y0-4,"text-anchor":"start",fill:"var(--muted)","font-size":11});
+    unit.textContent="%"; s.appendChild(unit);
+
+    let p="";
+    H.forEach((d,i)=> p += (i?"L":"M")+X(i,x0,x1)+","+Y(d.utilization));
+    s.appendChild(svg("path",{d:p,fill:"none",stroke:"var(--s2)","stroke-width":2.4,
+      "stroke-linejoin":"round","stroke-linecap":"round"}));
+    H.forEach((d,i)=>{
+      const c = svg("circle",{cx:X(i,x0,x1), cy:Y(d.utilization), r:3.4, fill:"var(--s2)"});
+      hoverable(c, "<b>"+qlab(d.period_end)+"</b>"+
+        '<div class="r"><span>Utilisation</span><span>'+pct(d.utilization,1)+'</span></div>'+
+        '<div class="r"><span>Drawn</span><span>'+usd(d.drawn)+'</span></div>');
+      s.appendChild(c);
+    });
+    xlabels(s, xs.map(o=>({x:X(o.i,x0,x1), t:o.t})), y1+19);
+
+    const lo = H.reduce((a,b)=> b.utilization<a.utilization?b:a);
+    const li = H.indexOf(lo);
+    s.appendChild(svg("circle",{cx:X(li,x0,x1), cy:Y(lo.utilization), r:5.4,
+      fill:"none", stroke:"var(--ink)", "stroke-width":1.4}));
+    const lt = svg("text",{x:X(li,x0,x1), y:Y(lo.utilization)+21, "text-anchor":"middle",
+      fill:"var(--ink)", "font-size":11.5});
+    lt.setAttribute("class","num"); lt.textContent="trough "+pct(lo.utilization,1);
+    s.appendChild(lt);
+
+    const lastH = H[H.length-1];
+    $("#why-util").innerHTML = "<b>Why the turn in utilisation is the story.</b> Utilisation "
+      + "fell for six straight quarters to a trough of " + pct(lo.utilization,1) + " in "
+      + qlab(lo.period_end) + ", then jumped to " + pct(lastH.utilization,1)
+      + " in a single quarter. The ceiling was never the constraint — "
+      + usd(lastH.headroom) + " sits undrawn even now. What changed is appetite. A company "
+      + "that spent a year and a half shrinking its book has decided to use the lines again.";
+  })();
+})();
+
+/* ---------------- inventory vs leverage ---------------- */
+(function(){
+  const s = $("#c-bs");
+  const H = bs.filter(d=>d.inventory_real_estate!=null);
+  const x0=10,y0=22,x1=800,y1=274;
+  const max = Math.max(...H.map(d=>Math.max(d.inventory_real_estate||0, d.abs_debt_total||0,
+    d.cash_unrestricted||0)))*1.1;
+  const X = i => x0 + i*(x1-x0)/(H.length-1);
+  const Y = v => y1 - v/max*(y1-y0);
+  hgrid(s,x0,x1, ticks(0,max,4,y0,y1), v=>(v/1e9).toFixed(0));
+  const unit = svg("text",{x:x1+7,y:y0-6,"text-anchor":"start",fill:"var(--muted)","font-size":11});
+  unit.textContent="$bn"; s.appendChild(unit);
+  xlabels(s, H.map((d,i)=>({x:X(i), t:qlab(d.period_end), i})).filter(o=>o.i%4===0), y1+20);
+
+  const SER = [
+    {k:"inventory_real_estate", c:"var(--s1)", n:"Inventory"},
+    {k:"abs_debt_total",        c:"var(--s2)", n:"Asset-backed debt"},
+    {k:"cash_unrestricted",     c:"var(--s3)", n:"Unrestricted cash"},
+  ];
+  SER.forEach(ser=>{
+    let p="";
+    H.forEach((d,i)=>{ const v=d[ser.k]; if(v==null) return; p += (p?"L":"M")+X(i)+","+Y(v); });
+    s.appendChild(svg("path",{d:p, fill:"none", stroke:ser.c, "stroke-width":2.2,
+      "stroke-linejoin":"round","stroke-linecap":"round"}));
+  });
+  // direct labels at the right-hand end, nudged apart if they collide
+  const ends = SER.map(ser=>({ser, v:H[H.length-1][ser.k], y:Y(H[H.length-1][ser.k])}))
+    .filter(o=>o.v!=null).sort((a,b)=>a.y-b.y);
+  for (let i=1;i<ends.length;i++)
+    if (ends[i].y - ends[i-1].y < 15) ends[i].y = ends[i-1].y + 15;
+  ends.forEach(o=>{
+    const t = svg("text",{x:X(H.length-1)+9, y:o.y+4, "text-anchor":"start",
+      fill:o.ser.c, "font-size":12.5, "font-weight":600});
+    t.textContent = o.ser.n; s.appendChild(t);
+  });
+  H.forEach((d,i)=>{
+    const r = svg("rect",{x:X(i)-(x1-x0)/H.length/2, y:y0, width:(x1-x0)/H.length,
+      height:y1-y0, fill:"transparent"});
+    hoverable(r, "<b>"+qlab(d.period_end)+"</b>"+
+      SER.map(ser=>'<div class="r"><span>'+ser.n+'</span><span>'+usd(d[ser.k])+'</span></div>').join(""));
+    s.appendChild(r);
+  });
+})();
+
+/* ---------------- MSA table ---------------- */
+(function(){
+  const tb = $("#t-msa tbody");
+  D.msa.forEach(m=>{
+    const tr = el("tr");
+    tr.appendChild(el("td",null, shortMetro(m.region)+", "+m.region.split(",")[1].trim().split(" ")[0]));
+    const cells = [
+      [m.months_of_supply.toFixed(2), m.months_of_supply>4],
+      [(deltaPeer(m)>=0?"+":"")+deltaPeer(m).toFixed(2), deltaPeer(m)>0],
+      [m.median_dom.toFixed(0), false],
+      [pct(m.price_drops,1), m.price_drops>0.35],
+      [m.avg_sale_to_list.toFixed(3), m.avg_sale_to_list<0.98],
+      [Math.round(m.inventory).toLocaleString(), false],
+    ];
+    cells.forEach(([v,hi])=>{ const td=el("td", hi?"hi":null, v); tr.appendChild(td); });
+    tb.appendChild(tr);
+  });
+  $("#msa-src").textContent = "Rolling month ending " + D.msa_period
+    + ". Red marks a reading on the wrong side of its threshold. The average across these six metros was "
+    + peerAvg(D.msa[0]).toFixed(2) + ". This is a peer-group comparator, not a national one.";
+
+  const phx = D.msa.find(m=>/Phoenix/.test(m.region));
+  const slowest = D.msa.reduce((a,b)=> b.median_dom>a.median_dom?b:a);
+  if (phx && slowest) {
+    $("#why-phx").innerHTML = "<b>Why Phoenix looks contradictory.</b> Phoenix has the "
+      + "tightest months of supply of the six — " + phx.months_of_supply.toFixed(2)
+      + ", comfortably below the national " + peerAvg(phx).toFixed(2)
+      + " — and yet the slowest listings, at " + phx.median_dom.toFixed(0)
+      + " days on market. Those measure different things. Months of supply is about the "
+      + "<em>stock</em> of listings relative to sales; days on market is about how long an "
+      + "individual home waits. A market can be thinly supplied and still slow if what is "
+      + "listed is mispriced. For an iBuyer the second number is the expensive one, because "
+      + "carrying cost accrues per day, per house.";
+  }
+  wireTerms($("#s-msa"));
+})();
+
+/* ---------------- small multiples: months of supply ---------------- */
+(function(){
+  const host = $("#smallmult");
+  const byR = {};
+  D.msa_series.forEach(r=>{ (byR[r.region]=byR[r.region]||[]).push(r); });
+  const names = Object.keys(byR).sort((a,b)=>
+    byR[b][byR[b].length-1].months_of_supply - byR[a][byR[a].length-1].months_of_supply);
+  const all = D.msa_series.map(r=>r.months_of_supply).filter(v=>v!=null);
+  const lo = 0, hi = Math.max(...all)*1.08;
+  // Peer average, computed here from the metros on this page. The exported
+  // baseline is NOT national -- the Redfin table is filtered to these metros
+  // before it is loaded, so an average over it is a peer-group figure.
+  const natl = {};
+  D.msa_series.forEach(r=>{
+    if (r.months_of_supply==null) return;
+    (natl[r.period_begin]=natl[r.period_begin]||[]).push(r.months_of_supply);
+  });
+  Object.keys(natl).forEach(k=>{
+    const a=natl[k]; natl[k]=[a.reduce((s,v)=>s+v,0)/a.length];
+  });
+  const periods = byR[names[0]].map(r=>r.period_begin);
+
+  const grid = el("div");
+  grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:22px 26px";
+  names.forEach(n=>{
+    const cell = el("div");
+    const w=220,h=112, x0=4,y0=14,x1=196,y1=86;
+    const X = i => x0 + i*(x1-x0)/(periods.length-1);
+    const Y = v => y1 - (v-lo)/(hi-lo)*(y1-y0);
+    const s = svg("svg",{viewBox:"0 0 "+w+" "+h, class:"chart", role:"img",
+      "aria-label":"Months of supply, "+shortMetro(n)});
+
+    // shared reference gridlines, drawn faintly so panels compare cleanly
+    [2,4,6].forEach(v=>{
+      if (v>hi) return;
+      s.appendChild(svg("line",{x1:x0,x2:x1,y1:Y(v),y2:Y(v),
+        stroke: v===4 ? "var(--rule-firm)" : "var(--rule)", "stroke-width":1,
+        "stroke-dasharray": v===4 ? "3 2" : "none"}));
+    });
+
+    // national comparator
+    let pn="";
+    periods.forEach((p,i)=>{
+      const v = natl[p] && natl[p][0]; if(v==null) return;
+      pn += (pn?"L":"M")+X(i)+","+Y(v);
+    });
+    s.appendChild(svg("path",{d:pn,fill:"none",stroke:"#B8B0A4","stroke-width":1.4}));
+
+    let p="";
+    byR[n].forEach((r,i)=>{ if(r.months_of_supply==null) return;
+      p += (p?"L":"M")+X(i)+","+Y(r.months_of_supply); });
+    s.appendChild(svg("path",{d:p,fill:"none",stroke:"var(--s1)","stroke-width":2,
+      "stroke-linejoin":"round","stroke-linecap":"round"}));
+    const lastV = byR[n][byR[n].length-1].months_of_supply;
+    s.appendChild(svg("circle",{cx:X(periods.length-1), cy:Y(lastV), r:3, fill:"var(--s1)"}));
+
+    const ttl = svg("text",{x:x0,y:8,fill:"var(--ink)","font-size":12,"font-weight":600});
+    ttl.textContent = shortMetro(n); s.appendChild(ttl);
+    const val = svg("text",{x:x1,y:8,"text-anchor":"end",fill:"var(--s1)","font-size":12,
+      "font-weight":600}); val.setAttribute("class","num");
+    val.textContent = lastV.toFixed(1); s.appendChild(val);
+
+    [[0,mlab(periods[0])],[periods.length-1,mlab(periods[periods.length-1])]].forEach(([i,t])=>{
+      const tx = svg("text",{x:X(i), y:y1+16, "text-anchor": i===0?"start":"end",
+        fill:"var(--muted)","font-size":10}); tx.setAttribute("class","num");
+      tx.textContent=t; s.appendChild(tx);
+    });
+    periods.forEach((pp,i)=>{
+      const r = svg("rect",{x:X(i)-(x1-x0)/periods.length/2, y:y0,
+        width:(x1-x0)/periods.length, height:y1-y0, fill:"transparent"});
+      const v = byR[n][i];
+      hoverable(r, "<b>"+shortMetro(n)+" · "+mlab(pp)+"</b>"+
+        '<div class="r"><span>Months of supply</span><span>'
+        +(v&&v.months_of_supply!=null?v.months_of_supply.toFixed(2):"—")+'</span></div>'+
+        '<div class="r"><span>Six-metro avg</span><span>'
+        +(natl[pp]?natl[pp][0].toFixed(2):"—")+'</span></div>');
+      s.appendChild(r);
+    });
+    cell.appendChild(s);
+    grid.appendChild(cell);
+  });
+  host.appendChild(grid);
+  const key = el("p");
+  key.style.cssText="font-family:var(--sans);font-size:12px;color:var(--muted);margin:12px 0 0";
+  key.innerHTML = '<span style="display:inline-block;width:18px;height:2px;'
+    +'background:var(--s1);vertical-align:middle;margin-right:6px"></span>Metro'
+    +'<span style="display:inline-block;width:18px;height:2px;background:#B8B0A4;'
+    +'vertical-align:middle;margin:0 6px 0 20px"></span>Six-metro average'
+    +'<span style="margin-left:20px">Dashed rule marks four months — the line between a '
+    +'seller’s market and a balanced one.</span>';
+  host.appendChild(key);
+})();
+
+/* ---------------- clearance risk ---------------- */
+(function(){
+  const s = $("#c-risk"), M = D.msa;
+  const x0=44,y0=22,x1=470,y1=246;
+  const xs=M.map(m=>m.months_of_supply), ys=M.map(m=>m.price_drops);
+  const xmin=Math.min(...xs)*0.93, xmax=Math.max(...xs)*1.07;
+  const ymin=Math.min(...ys)*0.90, ymax=Math.max(...ys)*1.10;
+  const X = v => x0 + (v-xmin)/(xmax-xmin)*(x1-x0);
+  const Y = v => y1 - (v-ymin)/(ymax-ymin)*(y1-y0);
+  hgrid(s,x0,x1, ticks(ymin,ymax,3,y0,y1), v=>(v*100).toFixed(0));
+  const unit = svg("text",{x:x1+7,y:y0-6,"text-anchor":"start",fill:"var(--muted)","font-size":11});
+  unit.textContent="% cutting price"; s.appendChild(unit);
+  xlabels(s, ticks(xmin,xmax,4,y0,y1).map(t=>({x:X(t.v), t:t.v.toFixed(1)})), y1+19);
+  const xa = svg("text",{x:(x0+x1)/2, y:y1+40, "text-anchor":"middle", fill:"var(--muted)","font-size":11.5});
+  xa.textContent="Months of supply"; s.appendChild(xa);
+
+  const natl = M[0].mos_national;
+  if (natl>=xmin && natl<=xmax){
+    s.appendChild(svg("line",{x1:X(natl),x2:X(natl),y1:y0,y2:y1,stroke:"var(--rule-firm)",
+      "stroke-width":1,"stroke-dasharray":"3 3"}));
+    const t = svg("text",{x:X(natl), y:y0-6, "text-anchor":"middle", fill:"var(--muted)","font-size":10.5});
+    t.textContent="six-metro avg"; s.appendChild(t);
+  }
+  const rmax = Math.max(...M.map(m=>m.inventory));
+  const placed=[];
+  function place(cx,cy,r,w){
+    const h=13, cands=[cy-r-6, cy+r+14, cy-r-20, cy+r+27];
+    for (const yy of cands){
+      const b={x1:cx-w/2,x2:cx+w/2,y1:yy-h,y2:yy};
+      if(!placed.some(p=>b.x1<p.x2&&b.x2>p.x1&&b.y1<p.y2&&b.y2>p.y1) && b.y1>4 && b.y2<y1+18){
+        placed.push(b); return yy;
+      }
+    }
+    placed.push({x1:cx-w/2,x2:cx+w/2,y1:cands[0]-h,y2:cands[0]}); return cands[0];
+  }
+  M.forEach(m=>{
+    const r = 7 + Math.sqrt(m.inventory/rmax)*15;
+    const c = svg("circle",{cx:X(m.months_of_supply), cy:Y(m.price_drops), r,
+      fill:"var(--s1)", "fill-opacity":.18, stroke:"var(--s1)", "stroke-width":1.8});
+    hoverable(c, "<b>"+shortMetro(m.region)+"</b>"+
+      '<div class="r"><span>Months of supply</span><span>'+m.months_of_supply.toFixed(2)+'</span></div>'+
+      '<div class="r"><span>vs national</span><span>'+(deltaPeer(m)>=0?"+":"")+deltaPeer(m).toFixed(2)+'</span></div>'+
+      '<div class="r"><span>Cutting price</span><span>'+pct(m.price_drops,1)+'</span></div>'+
+      '<div class="r"><span>Median DOM</span><span>'+m.median_dom.toFixed(0)+'</span></div>'+
+      '<div class="r"><span>Active listings</span><span>'+Math.round(m.inventory).toLocaleString()+'</span></div>');
+    s.appendChild(c);
+    const nm = shortMetro(m.region);
+    const ly = place(X(m.months_of_supply), Y(m.price_drops), r, nm.length*6.1);
+    const t = svg("text",{x:X(m.months_of_supply), y:ly, "text-anchor":"middle",
+      fill:"var(--ink)", "font-size":11.5});
+    t.textContent = nm; s.appendChild(t);
+  });
+})();
+
+/* ---------------- live inventory ---------------- */
+(function(){
+  const host = $("#s-inv");
+  if (!D.listing_count){
+    host.innerHTML = '<h2>The houses themselves</h2><div class="howto"><b>How to read this</b>'
+      + 'The listing sweep had not completed when this page was built.</div>';
+    return;
+  }
+  const NAMES = {phoenix:"Phoenix", atlanta:"Atlanta", dfw:"Dallas–Fort Worth",
+    charlotte:"Charlotte", tampa:"Tampa", las_vegas:"Las Vegas", other:"Outside the six"};
+  const totalL = D.listing_msa.reduce((a,r)=>a+Number(r.listings),0);
+  const inFocus = D.listing_msa.filter(r=>r.msa_key!=="other")
+    .reduce((a,r)=>a+Number(r.listings),0);
+  const agTot = D.aging.reduce((a,b)=>a+Number(b.listings),0);
+  const over90 = D.aging.filter(a=>a.age_bucket!=="000-089").reduce((a,b)=>a+Number(b.listings),0);
+
+  host.innerHTML =
+    '<h2>The houses themselves</h2>'
+    + '<div class="howto"><b>How to read this</b>'
+    + 'Everything above comes from filings and market aggregates. This section is the actual '
+    + 'inventory, house by house, read from Opendoor’s own published listing pages on '
+    + D.as_of + '. <a class="dfn" href="#g-dom" data-t="dom">Days on market</a> is the number '
+    + 'that costs money: a home past ninety days carries materially higher risk of an '
+    + '<a class="dfn" href="#g-writedown" data-t="writedown">inventory write-down</a>.</div>'
+    + '<div class="cols">'
+    +   '<figure><div class="fig-rule"></div>'
+    +     '<p class="fig-t">How long they have been listed</p>'
+    +     '<p class="fig-d">Active listings by days on market, ten-day buckets.</p>'
+    +     '<svg class="chart" id="c-dom" viewBox="0 0 440 250" role="img" '
+    +       'aria-label="Distribution of days on market"></svg>'
+    +     '<figcaption><span class="prov">Opendoor sitemap</span>'+totalL.toLocaleString()
+    +     ' listings, of which '+inFocus.toLocaleString()+' sit in the six metros above.'
+    +     '</figcaption></figure>'
+    +   '<figure><div class="fig-rule"></div>'
+    +     '<p class="fig-t">Holding-risk buckets</p>'
+    +     '<p class="fig-d">The same inventory, grouped by the thresholds that matter for '
+    +     'write-down risk. Shading darkens with age.</p>'
+    +     '<svg class="chart" id="c-age" viewBox="0 0 440 250" role="img" '
+    +       'aria-label="Active listings by age bucket"></svg>'
+    +     '<figcaption><span class="prov">Opendoor sitemap</span>Bars are counts; the figure '
+    +     'beside each is its share of all active inventory.</figcaption></figure>'
+    + '</div>'
+    + '<p class="why" id="why-age"></p>'
+    + '<figure style="margin-top:34px"><div class="fig-rule"></div>'
+    +   '<p class="fig-t">Inventory by metro</p>'
+    +   '<p class="fig-d">Active listings, median days on market and aggregate asking value.</p>'
+    +   '<div class="tw"><table class="data" id="t-inv"><thead><tr><th>Metro</th>'
+    +   '<th>Active listings</th><th>Median DOM</th><th>Median asking</th>'
+    +   '<th>Avg $/sq ft</th><th>Aggregate asking value</th></tr></thead><tbody></tbody>'
+    +   '</table></div><figcaption><span class="prov">Opendoor sitemap</span>'
+    +   'Metro assignment is geographic, by distance from each metro centroid.'
+    +   '</figcaption></figure>';
+
+  // DOM histogram
+  (function(){
+    const s = $("#c-dom"), B = D.dom_dist.filter(b=>b.b!=null);
+    const x0=34,y0=16,x1=404,y1=204;
+    const max = Math.max(...B.map(b=>Number(b.n)))*1.1;
+    const W = (x1-x0)/B.length;
+    hgrid(s,x0,x1, ticks(0,max,4,y0,y1), v=>Math.round(v));
+    B.forEach((b,i)=>{
+      const n=Number(b.n), h=(n/max)*(y1-y0);
+      const mid=(Number(b.lo)+Number(b.hi))/2;
+      const c = mid>=270?"var(--q4)":mid>=180?"var(--q3)":mid>=90?"var(--q2)":"var(--s1)";
+      const r = svg("rect",{x:x0+i*W+1, y:y1-h, width:Math.max(W-2,1), height:Math.max(h,1), fill:c});
+      hoverable(r, "<b>"+b.lo+"–"+b.hi+" days</b>"+
+        '<div class="r"><span>Listings</span><span>'+n+'</span></div>');
+      s.appendChild(r);
+    });
+    // the ninety-day threshold, annotated in place
+    const idx90 = B.findIndex(b=>Number(b.lo)>=90);
+    if (idx90>0){
+      const xx = x0+idx90*W;
+      s.appendChild(svg("line",{x1:xx,x2:xx,y1:y0-4,y2:y1,stroke:"var(--red)","stroke-width":1.2,
+        "stroke-dasharray":"3 2"}));
+      const t = svg("text",{x:xx+5,y:y0+4,fill:"var(--red)","font-size":11,"font-weight":600});
+      t.textContent="90 days"; s.appendChild(t);
+    }
+    xlabels(s, B.map((b,i)=>({x:x0+i*W+W/2, t:b.lo, i})).filter(o=>o.i%6===0), y1+18);
+    const xa = svg("text",{x:(x0+x1)/2,y:y1+38,"text-anchor":"middle",fill:"var(--muted)","font-size":11.5});
+    xa.textContent="Days on market"; s.appendChild(xa);
+  })();
+
+  // aging buckets, sequential ramp
+  (function(){
+    const s = $("#c-age");
+    const LAB={"000-089":"Under 90 days","090-179":"90–179","180-269":"180–269",
+               "270-plus":"270 and over"};
+    const COL={"000-089":"var(--q1)","090-179":"var(--q2)","180-269":"var(--q3)","270-plus":"var(--q4)"};
+    const A = D.aging;
+    const max = Math.max(...A.map(a=>Number(a.listings)))*1.16;
+    const x0=104, x1=360, rowH=48;
+    A.forEach((a,i)=>{
+      const y = 22+i*rowH, n=Number(a.listings), sh=n/agTot;
+      const lb = svg("text",{x:x0-10,y:y+15,"text-anchor":"end",fill:"var(--ink)","font-size":12.5});
+      lb.textContent = LAB[a.age_bucket]; s.appendChild(lb);
+      const w = Math.max((x1-x0)*(n/max),2);
+      const r = svg("rect",{x:x0,y:y,width:w,height:21,fill:COL[a.age_bucket]});
+      hoverable(r, "<b>"+LAB[a.age_bucket]+"</b>"+
+        '<div class="r"><span>Listings</span><span>'+n.toLocaleString()+'</span></div>'+
+        '<div class="r"><span>Share</span><span>'+pct(sh,1)+'</span></div>'+
+        '<div class="r"><span>Asking value</span><span>'+usd(Number(a.value))+'</span></div>');
+      s.appendChild(r);
+      const vt = svg("text",{x:x0+w+9,y:y+15,fill:"var(--ink)","font-size":12.5,"font-weight":600});
+      vt.setAttribute("class","num");
+      vt.textContent = n.toLocaleString()+"  "+pct(sh,1); s.appendChild(vt);
+      const sub = svg("text",{x:x0,y:y+35,fill:"var(--muted)","font-size":11});
+      sub.setAttribute("class","num"); sub.textContent = usd(Number(a.value))+" asking";
+      s.appendChild(sub);
+    });
+  })();
+
+  // per-metro table
+  (function(){
+    const tb = $("#t-inv tbody");
+    D.listing_msa.forEach(r=>{
+      const tr = el("tr");
+      tr.appendChild(el("td", null, NAMES[r.msa_key]||r.msa_key));
+      [Number(r.listings).toLocaleString(),
+       r.median_dom!=null?Number(r.median_dom).toFixed(0):"—",
+       usd(Number(r.median_price)),
+       r.avg_ppsf!=null?"$"+Number(r.avg_ppsf).toFixed(0):"—",
+       usd(Number(r.total_value))].forEach(v=>tr.appendChild(el("td","num",v)));
+      tb.appendChild(tr);
+    });
+  })();
+
+  $("#why-age").innerHTML = "<b>Why the ninety-day line is drawn where it is.</b> "
+    + pct(over90/agTot,1) + " of active inventory — " + over90.toLocaleString()
+    + " houses — has been listed for more than ninety days. That threshold is not "
+    + "arbitrary: it is roughly where lenders begin applying haircuts to a home’s "
+    + "contribution to the <a class='dfn' href='#g-borrowbase' data-t='borrowbase'>borrowing "
+    + "base</a>, and where accounting rules start to bite on carrying value. A house that "
+    + "sits does not merely earn less; it also shrinks the collateral pool that funds the "
+    + "next purchase.";
+  wireTerms(host);
+})();
+
+/* ---------------- footer ---------------- */
+$("#foot-note").innerHTML =
+  "Financial figures are as reported for " + last.period_end + "; market data is the rolling "
+  + "month ending " + D.msa_period + "; inventory was swept on " + D.as_of + ". "
+  + (D.parse_exceptions
+      ? D.parse_exceptions + " listing URLs could not be fetched, because Opendoor’s "
+        + "sitemap publishes them with an empty address slug. They are recorded rather than "
+        + "silently dropped."
+      : "No parse exceptions were recorded.")
+  + " This is an analytical exercise built from public filings and public market data. "
+  + "It is not investment advice.";
+
+wireTerms(document);
+</script>

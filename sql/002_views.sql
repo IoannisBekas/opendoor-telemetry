@@ -227,17 +227,26 @@ CROSS JOIN max_snap m
 WHERE l.days_on_market IS NOT NULL;
 
 -- ---------------------------------------------------------------------
--- v_msa_vs_national :: delta MOS = MOS_msa - MOS_national
+-- v_msa_vs_peers :: delta MOS = MOS_msa - MOS_peer_avg
+--
+-- IMPORTANT: this baseline is NOT national. redfin_bulk.py filters the bulk
+-- file down to the configured target regions before loading, so this table
+-- only ever contains those metros and an AVG() over it is the peer-group
+-- average of the Opendoor concentration markets -- a useful comparator, but
+-- not the United States.
+--
+-- To get a genuine national baseline, ingest Redfin's national tracker as a
+-- separate table and join it here; do not widen this average.
 -- Redfin metro tracker carries MONTHS_OF_SUPPLY directly.
 -- ---------------------------------------------------------------------
 -- Every filter below pins is_seasonally_adjusted = FALSE. Redfin ships both
 -- an adjusted and a raw row per period/region/property type; without the pin
 -- each metro appears twice and every average is silently double-counted.
-CREATE OR REPLACE VIEW v_msa_vs_national AS
-WITH national AS (
+CREATE OR REPLACE VIEW v_msa_vs_peers AS
+WITH peers AS (
     SELECT period_begin,
-           AVG(months_of_supply) AS mos_national,
-           AVG(median_dom)       AS dom_national
+           AVG(months_of_supply) AS mos_peer_avg,
+           AVG(median_dom)       AS dom_peer_avg
     FROM   redfin_metro_metrics
     WHERE  property_type = 'All Residential'
       AND  is_seasonally_adjusted = FALSE
@@ -247,10 +256,10 @@ SELECT
     m.period_begin,
     m.region,
     m.months_of_supply,
-    n.mos_national,
-    m.months_of_supply - n.mos_national      AS delta_mos,
+    n.mos_peer_avg,
+    m.months_of_supply - n.mos_peer_avg      AS delta_mos_vs_peer,
     m.median_dom,
-    m.median_dom - n.dom_national            AS delta_dom,
+    m.median_dom - n.dom_peer_avg            AS delta_dom_vs_peer,
     m.price_drops,
     m.avg_sale_to_list,
     m.inventory,
@@ -260,7 +269,7 @@ SELECT
          THEN m.pending_sales / m.inventory
     END                                      AS pending_to_active
 FROM      redfin_metro_metrics m
-JOIN      national n USING (period_begin)
+JOIN      peers n USING (period_begin)
 WHERE     m.property_type = 'All Residential'
   AND     m.is_seasonally_adjusted = FALSE;
 

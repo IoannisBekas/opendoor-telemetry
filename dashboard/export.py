@@ -45,21 +45,21 @@ with connect() as c, c.cursor() as cur:
         ORDER BY period_end""")
 
     # ---- MSA clearance, latest common period
-    cur.execute("SELECT max(period_begin) FROM v_msa_vs_national")
+    cur.execute("SELECT max(period_begin) FROM v_msa_vs_peers")
     latest_msa = cur.fetchone()[0]
     out["msa_period"] = latest_msa.isoformat()
     out["msa"] = rows(cur, """
-        SELECT region, months_of_supply, mos_national, delta_mos, median_dom,
-               delta_dom, price_drops, avg_sale_to_list, inventory, homes_sold,
+        SELECT region, months_of_supply, mos_peer_avg, delta_mos_vs_peer, median_dom,
+               delta_dom_vs_peer, price_drops, avg_sale_to_list, inventory, homes_sold,
                pending_to_active
-        FROM v_msa_vs_national WHERE period_begin = %s
+        FROM v_msa_vs_peers WHERE period_begin = %s
         ORDER BY months_of_supply DESC""", (latest_msa,))
 
     # ---- MOS time series per metro (last 36 months)
     out["msa_series"] = rows(cur, """
         SELECT period_begin, region, months_of_supply, median_dom, price_drops
-        FROM v_msa_vs_national
-        WHERE period_begin >= (SELECT max(period_begin) FROM v_msa_vs_national) - interval '36 months'
+        FROM v_msa_vs_peers
+        WHERE period_begin >= (SELECT max(period_begin) FROM v_msa_vs_peers) - interval '36 months'
         ORDER BY period_begin, region""")
 
     # ---- listings: aging, cuts, per-MSA
