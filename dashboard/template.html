@@ -39,6 +39,27 @@ body{
 .num{font-variant-numeric:tabular-nums lining-nums}
 .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
 
+/* Ambient ground: a still generated on Higgsfield (Nano Banana Pro, 16:9, 4K)
+   then composited to the readability contract in docs/higgsfield_prompts.md --
+   a scrim pulling the frame toward #0A1020, plus a radial mask darkening the
+   centre 60x55% where the card grid lands.
+   Measured on the shipped asset: peak luminance 3.03%, centre 0.72% against
+   1.12% at the edges, white-text contrast 11.6:1, saturation 44% across the
+   brightest decile.
+   WebP is 19KB against 1.7MB for the PNG, so it is offered first; the PNG is
+   the fallback and the archival copy. */
+#bg{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:0; pointer-events:none;
+  background-color:#0A1020;
+  background-image:url("assets/bg-ambient-2.png");
+  background-image:image-set(
+    url("assets/bg-ambient-2.webp") type("image/webp"),
+    url("assets/bg-ambient-2.png")  type("image/png"));
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+}
+.wrap,.mast{position:relative; z-index:1}
+
 /* ---------- masthead ---------- */
 .mast{
   position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
@@ -170,6 +191,8 @@ footer a{color:var(--muted)}
   text-transform:uppercase; margin-bottom:3px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 </style>
+
+<div id="bg" aria-hidden="true"></div>
 
 <div class="mast">
   <div class="mast-in">

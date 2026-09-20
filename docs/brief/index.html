@@ -1,7 +1,7 @@
-<title>Opendoor, Read Cold</title>
+<title>Opendoor, House by House</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap">
 <style>
 /* =====================================================================
    Single-theme by intent. The Economist idiom is a printed-page one -
@@ -12,34 +12,61 @@
    ===================================================================== */
 :root{
   color-scheme: light;
-  --paper:#FDF9F0;
-  --ink:#121212;
-  --body:#2B2B2B;
-  --muted:#5B6B73;
-  --rule:#D8D2C6;
-  --rule-firm:#B8B0A4;
-  --red:#E3120B;
+  /* Sampled from the supplied logo files: both resolve to #1B85E8. That is
+     the brand blue, and at 3.51:1 on this ground it is a FILL colour only --
+     it never carries text. --s1 is the readable chart blue. */
+  --brand:#1B85E8;
+  --paper:#F4F7FB;
+  --card:#FFFFFF;
+  --ink:#0F2340;
+  --body:#2C3A4E;
+  --muted:#5A6B82;
+  --rule:#DCE4EE;
+  --rule-firm:#B9C5D6;
+  --accent:#0F6FC9;
 
-  --s1:#006BA2;  --s2:#E3120B;  --s3:#2E7D32;  --s4:#7B4EA8;
-  --q1:#A9CBE0;  --q2:#6FA3C4;  --q3:#357FA8;  --q4:#00537F;
+  --s1:#0F6FC9;  --s2:#D9622C;  --s3:#0E8F70;  --s4:#7A4FC0;
+  --q1:#A8CDEF;  --q2:#5FA3DC;  --q3:#1B76C4;  --q4:#0B4E8A;
 
-  --sans:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"Public Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --display:Fraunces,Georgia,"Times New Roman",serif;
 }
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--paper); color:var(--body);
-  font-family:var(--serif); font-size:17px; line-height:1.55;
+  font-family:var(--sans); font-size:16.5px; line-height:1.6;
   -webkit-font-smoothing:antialiased;
 }
 .wrap{max-width:1180px; margin:0 auto; padding-inline:16px; padding-block:0 72px}
-.num{font-variant-numeric:tabular-nums lining-nums; font-family:var(--sans)}
+.num{font-variant-numeric:tabular-nums lining-nums}
 
 /* ---------- masthead ---------- */
-.flag{width:64px; height:26px; background:var(--red); margin-bottom:18px}
-header.mast{padding-block:28px 0}
+.flag{width:72px; height:8px; border-radius:4px; background:var(--brand); margin-bottom:22px}
+/* Hero banner. Generated on Higgsfield from the supplied logo files and
+   chosen by the client. It already carries the wordmark and is visually
+   busy, so the headline sits BELOW it rather than over it -- type on top of
+   this frame would collide with the mark and the chart lines.
+   WebP is 111KB against 3.0MB for the PNG; PNG is the fallback. */
+.hero{
+  margin-inline:-16px; margin-bottom:0;
+  aspect-ratio:2400/1339; width:calc(100% + 32px);
+  background-color:#E8F0FA;
+  background-image:url("../assets/hero-brand.png");
+  background-image:image-set(
+    url("../assets/hero-brand.webp") type("image/webp"),
+    url("../assets/hero-brand.png")  type("image/png"));
+  background-size:cover; background-position:center;
+  border-bottom:1px solid var(--rule);
+}
+/* An independence notice, because the banner carries Opendoor's own mark and
+   this page is not theirs. */
+.indep{
+  font-size:12px; letter-spacing:.04em; text-transform:uppercase; font-weight:600;
+  color:var(--muted); padding:10px 0 0; margin:0;
+}
+header.mast{padding-block:0 0}
 h1{
-  font-family:var(--sans); font-weight:700; font-size:clamp(30px,5vw,46px);
+  font-family:var(--display); font-weight:700; font-size:clamp(30px,5vw,46px);
   line-height:1.06; letter-spacing:-.022em; color:var(--ink); margin:0 0 12px;
   text-wrap:balance; max-width:20ch;
 }
@@ -56,12 +83,12 @@ h1{
 /* ---------- sections ---------- */
 section{margin-top:54px}
 h2{
-  font-family:var(--sans); font-weight:600; font-size:25px; letter-spacing:-.018em;
+  font-family:var(--display); font-weight:600; font-size:25px; letter-spacing:-.018em;
   color:var(--ink); margin:0 0 10px; text-wrap:balance;
 }
-.howto{
+.howto{background:var(--card); border-radius:0 8px 8px 0; padding-block:12px; 
   font-size:16.5px; line-height:1.6; color:var(--body); max-width:66ch;
-  border-left:3px solid var(--rule-firm); padding:2px 0 2px 16px; margin:0 0 26px;
+  border-left:3px solid var(--brand); padding-inline:16px 18px; margin:0 0 24px;
 }
 .howto b{font-family:var(--sans); font-weight:600; font-size:12px;
   letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
@@ -69,8 +96,12 @@ h2{
 
 /* ---------- figure: the Economist chart block ---------- */
 /* red rule, title, deck, plot, source - in that order, always left-aligned */
-figure{margin:0 0 34px}
-.fig-rule{width:34px; height:4px; background:var(--red); margin-bottom:10px}
+figure{
+  margin:0 0 26px; background:var(--card); border:1px solid var(--rule);
+  border-radius:10px; padding:20px 22px;
+}
+figure figcaption{margin-top:12px; padding-top:10px; border-top:1px solid var(--rule)}
+.fig-rule{width:28px; height:3px; border-radius:2px; background:var(--brand); margin-bottom:10px}
 .fig-t{font-family:var(--sans); font-weight:600; font-size:17.5px;
   color:var(--ink); margin:0 0 3px; letter-spacing:-.012em}
 .fig-d{font-family:var(--sans); font-weight:400; font-size:13.5px;
@@ -87,7 +118,7 @@ figcaption .prov{
    without this, SVG text inherits the serif body face. */
 .chart text{font-family:var(--sans)}
 
-.cols{display:grid; grid-template-columns:1fr 1fr; gap:34px 40px}
+.cols{display:grid; grid-template-columns:1fr 1fr; gap:22px}
 @media (max-width:860px){.cols{grid-template-columns:1fr}}
 
 /* ---------- indicator table (replaces the glass KPI tiles) ---------- */
@@ -116,7 +147,7 @@ table.data th{
 table.data th:first-child,table.data td:first-child{text-align:left}
 table.data td{padding:9px 0; border-bottom:1px solid var(--rule); text-align:right}
 table.data tbody tr:last-child td{border-bottom:1px solid var(--rule-firm)}
-table.data .hi{color:var(--red); font-weight:600}
+table.data .hi{color:var(--accent); font-weight:600}
 
 /* ---------- defined terms ---------- */
 /* dotted underline marks a term that carries a definition; never colour alone */
@@ -124,7 +155,7 @@ table.data .hi{color:var(--red); font-weight:600}
   border-bottom:1px dotted var(--muted); cursor:help; text-decoration:none;
   color:inherit;
 }
-.dfn:hover,.dfn:focus{background:rgba(227,18,11,.07); outline:none}
+.dfn:hover,.dfn:focus{background:rgba(27,133,232,.10); outline:none}
 
 .tip{
   position:fixed; z-index:60; opacity:0; pointer-events:none; transition:opacity .1s;
@@ -137,20 +168,21 @@ table.data .hi{color:var(--red); font-weight:600}
 .tip .r span:last-child{color:#fff}
 
 /* ---------- annotation: why a number is surprising ---------- */
-.why{
+.why{background:var(--card); border-radius:0 8px 8px 0; padding-block:14px; 
   font-size:16px; line-height:1.6; max-width:64ch; margin:20px 0 0;
-  padding-left:16px; border-left:3px solid var(--red);
+  padding-inline:16px 18px; border-left:3px solid var(--accent);
 }
 .why b{font-family:var(--sans); font-weight:600; color:var(--ink)}
 
 /* ---------- glossary ---------- */
 #glossary dl{display:grid; grid-template-columns:minmax(150px,220px) 1fr;
-  gap:0; margin:0; border-top:1px solid var(--rule-firm)}
+  gap:0; margin:0; background:var(--card); border:1px solid var(--rule);
+  border-radius:10px; padding:4px 20px}
 #glossary dt{font-family:var(--sans); font-weight:600; font-size:14.5px; color:var(--ink);
   padding:13px 16px 13px 0; border-bottom:1px solid var(--rule)}
 #glossary dd{margin:0; padding:13px 0; border-bottom:1px solid var(--rule);
   font-size:16px; line-height:1.55}
-#glossary dt:target{color:var(--red)}
+#glossary dt:target{color:var(--accent)}
 @media (max-width:640px){
   #glossary dl{grid-template-columns:1fr}
   #glossary dt{padding-bottom:2px; border-bottom:0}
@@ -168,11 +200,15 @@ footer a{color:var(--muted)}
 
 <div class="wrap">
   <header class="mast">
+   <div class="hero" role="img" aria-label="Opendoor brand banner"></div>
+   <p class="indep">Independent analysis &middot; not affiliated with or endorsed by Opendoor Technologies</p>
+   <div style="padding-top:18px">
     <div class="flag" aria-hidden="true"></div>
-    <h1>An iBuyer, read cold</h1>
+    <h1>An iBuyer, house by house</h1>
     <p class="standfirst">Opendoor buys houses with borrowed money and hopes to sell them
     before the interest eats the margin. Everything below is drawn from public filings and
     public market data &mdash; no paid terminal, no vendor feed.</p>
+   </div>
     <div class="byline">
       <span id="b-fin"></span><span id="b-mkt"></span><span id="b-inv"></span>
     </div>
@@ -1013,9 +1049,9 @@ wireTerms($("#s-ind"));
     const idx90 = B.findIndex(b=>Number(b.lo)>=90);
     if (idx90>0){
       const xx = x0+idx90*W;
-      s.appendChild(svg("line",{x1:xx,x2:xx,y1:y0-4,y2:y1,stroke:"var(--red)","stroke-width":1.2,
+      s.appendChild(svg("line",{x1:xx,x2:xx,y1:y0-4,y2:y1,stroke:"var(--accent)","stroke-width":1.2,
         "stroke-dasharray":"3 2"}));
-      const t = svg("text",{x:xx+5,y:y0+4,fill:"var(--red)","font-size":11,"font-weight":600});
+      const t = svg("text",{x:xx+5,y:y0+4,fill:"var(--accent)","font-size":11,"font-weight":600});
       t.textContent="90 days"; s.appendChild(t);
     }
     xlabels(s, B.map((b,i)=>({x:x0+i*W+W/2, t:b.lo, i})).filter(o=>o.i%6===0), y1+18);

@@ -78,13 +78,19 @@ Two readings of identical data, from the same export:
 | | |
 | :--- | :--- |
 | **Dark operator view** | <https://ioannisbekas.github.io/opendoor-telemetry/> |
-| **Economist idiom, with explanations** | <https://ioannisbekas.github.io/opendoor-telemetry/economist/> |
+| **Explanatory brief, Opendoor brand** | <https://ioannisbekas.github.io/opendoor-telemetry/brief/> |
 
 The second is written for a reader who follows markets but not iBuying: a
 "how to read this" note under every heading, hover definitions on each metric,
-a linked glossary, and a sentence explaining each number that looks odd. Its
-palette was re-derived from scratch for a light ground and re-validated —
-see [`docs/economist_palette.md`](docs/economist_palette.md).
+a 19-term linked glossary, and a sentence explaining each number that looks
+odd. It is set in Opendoor's own blue, sampled from the logo files
+(`#1B85E8`), on a cool light ground. The palette was re-derived and
+re-validated for that ground — see
+[`docs/opendoor_palette.md`](docs/opendoor_palette.md).
+
+It went through an Economist-idiom draft first (cream ground, red accent);
+that version is in the git history at tag-free commit `77f0c04` if you ever
+want it back.
 
 Served by GitHub Pages from `docs/`. Rebuild it from `dashboard/` — see
 [`dashboard/README.md`](dashboard/README.md). Every figure is read out of
@@ -101,7 +107,7 @@ and the drop-in swap if you generate Higgsfield video later.
 ```bash
 PG_DSN=... python dashboard/export.py build/dash.json
 python dashboard/build.py dashboard/template.html build/dash.json docs/index.html
-python dashboard/build.py dashboard/economist_template.html build/dash.json docs/economist/index.html
+python dashboard/build.py dashboard/opendoor_template.html build/dash.json docs/brief/index.html
 git commit -am "refresh dashboards" && git push
 ```
 

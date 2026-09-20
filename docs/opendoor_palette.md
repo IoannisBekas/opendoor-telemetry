@@ -1,11 +1,95 @@
-# Economist-idiom palette — validation record
+# Opendoor-brand palette — validation record
 
-The dark dashboard's palette is not reused here. Nothing carried over: the
-dark-surface hexes were stepped for `#16203A` and every one of them fails on a
-cream ground. This page was re-derived from scratch against `#FDF9F0` and
-re-validated.
+The brand blue was **sampled from the supplied logo files**, not guessed. Both
+resolve to the same value:
 
-## What changed, and why
+| File | Dominant colour | Share |
+| :--- | :--- | :--- |
+| App icon (600x600) | `#1B85E8` | 88.8% |
+| Wordmark (420x420) | `#1B86E8` | 2.7% of frame, all of the mark |
+
+That matches the `#1C85E8` accent previously extracted from Opendoor's live
+site CSS, so three independent sources agree.
+
+## The brand blue cannot carry text
+
+Measured against candidate light grounds:
+
+| Ground | `#1B85E8` contrast |
+| :--- | :--- |
+| `#FFFFFF` | 3.77:1 |
+| `#F4F7FB` (chosen) | **3.51:1** |
+| `#EEF3F9` | 3.38:1 |
+
+Above the 3:1 floor for marks and fills, below the 4.5:1 needed for body text.
+So `#1B85E8` is the identity colour — the masthead bar, figure rules, fills —
+and a darker step, `#0F6FC9` at 4.72:1, does the work in charts. This is the
+same trap as `#0040E6` on the dark page, one step lighter.
+
+## Final palette
+
+| Token | Hex | Role |
+| :--- | :--- | :--- |
+| `--brand` | `#1B85E8` | Identity. Fills and rules only, never text |
+| `--paper` | `#F4F7FB` | Page ground, cool not cream |
+| `--card` | `#FFFFFF` | Panel surface |
+| `--ink` | `#0F2340` | Headings — 14.64:1 |
+| `--body` | `#2C3A4E` | Body text |
+| `--muted` | `#5A6B82` | Captions, axes |
+| `--accent` | `#0F6FC9` | Emphasis, chart series 1 |
+
+### Categorical, validated
+
+```
+1  #0F6FC9  blue
+2  #D9622C  orange
+3  #0E8F70  teal-green
+4  #7A4FC0  violet   (adjacent-pair forms only)
+```
+
+```
+all-pairs, 3 slots   worst CVD dE 8.6 (protan) · normal vision 18.9 · all >=3:1
+adjacent,  4 slots   worst CVD dE 8.6 (protan) · normal vision 25.4 · all >=3:1
+```
+
+Both report ALL CHECKS PASS with no warnings against `#F4F7FB`.
+
+### Sequential ramp — inventory aging
+
+Ordered measure, so a single hue, light to dark. Monotonic.
+
+| Step | Hex | Lightness | Contrast |
+| :--- | :--- | :--- | :--- |
+| Under 90 days | `#A8CDEF` | 58.2% | 1.55:1 |
+| 90-179 | `#5FA3DC` | 33.8% | 2.52:1 |
+| 180-269 | `#1B76C4` | 17.2% | 4.41:1 |
+| 270+ | `#0B4E8A` | 7.4% | 7.91:1 |
+
+The lightest step sits under 3:1; the relief rule is satisfied because every
+bar carries a visible count and share label.
+
+## Moving off the Economist idiom
+
+The first draft of this page used The Economist's language: cream `#FDF9F0`
+ground, `#E3120B` red, serif body with sans charts. It was rejected for
+looking too much like the original, and the whole palette was rebuilt rather
+than recoloured. Three things changed:
+
+- **Ground**: warm cream to cool blue-white. This is the change that does most
+  of the work.
+- **Accent**: Economist red to Opendoor blue. No red appears anywhere.
+- **Type**: their pairing is serif body plus sans charts. That is inverted
+  here — Fraunces carries display only, echoing the sturdy serif of the
+  Opendoor wordmark, and Public Sans does body, data and chart furniture.
+
+Panels also gained a white card surface, where the Economist idiom keeps
+everything flat on the paper.
+
+---
+
+## Appendix — the Economist draft's findings
+
+Retained because the contrast finding is reusable.
 
 ### The authentic Economist palette fails its own ground
 
