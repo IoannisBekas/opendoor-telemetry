@@ -1,0 +1,831 @@
+<title>Opendoor Balance Sheet Telemetry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --od-blue:#0040E6; --od-accent:#1C85E8; --od-navy:#1D2C4C;
+  --s1:#1C85E8; --s2:#D95926; --s3:#199E70; --s4:#9085E9;
+  --good:#22C55E; --warn:#E8A13C; --crit:#E66767;
+
+  --bg:#0A1020;
+  --bg-wash:
+    radial-gradient(1100px 620px at 18% -12%, rgba(0,64,230,.20), transparent 62%),
+    radial-gradient(880px 520px at 92% 4%, rgba(28,133,232,.11), transparent 58%),
+    #0A1020;
+  --glass:rgba(29,44,76,.38);
+  --glass-raised:rgba(29,44,76,.58);
+  --edge:rgba(236,234,230,.10);
+  --edge-strong:rgba(236,234,230,.18);
+  --ink:#EEF2F8;
+  --muted:#9AA5BF;
+  --faint:#67728F;
+  --grid:rgba(236,234,230,.07);
+  --shadow:0 8px 32px rgba(3,12,32,.45);
+  --r:14px;
+}
+/* This dashboard commits to one dark visual world on purpose: it is an
+   operator surface meant to be read on a wall display and in low light.
+   Every colour is painted explicitly so it holds on any host ground. */
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg-wash); background-attachment:fixed; color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px; margin:0 auto; padding-inline:16px; padding-block:0 64px}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ---------- masthead ---------- */
+.mast{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+  background:rgba(10,16,32,.82);
+  backdrop-filter:blur(14px) saturate(150%); -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border-bottom:1px solid var(--edge);
+}
+.mast-in{max-width:1280px; margin:0 auto; padding:12px 16px;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.tick{
+  font-weight:700; font-size:14px; letter-spacing:.06em;
+  padding:5px 10px; border-radius:7px; background:var(--od-blue); color:#fff;
+}
+.mast h1{font-size:15px; font-weight:600; margin:0; letter-spacing:-.01em}
+.mast .sub{color:var(--muted); font-size:13px; margin:0}
+.mast-right{margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pill{
+  font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; font-weight:600;
+  padding:4px 9px; border-radius:999px; border:1px solid var(--edge-strong); color:var(--muted);
+}
+.pill.live{color:var(--good); border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.08)}
+
+/* ---------- section scaffolding ---------- */
+section{margin-top:40px}
+.sec-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:14px}
+.sec-head h2{font-size:19px; font-weight:600; margin:0; letter-spacing:-.015em}
+.sec-head p{margin:0; color:var(--muted); font-size:13.5px; flex:1 1 320px}
+/* Provenance is the point of this project, so every panel states the free
+   source it came from. That is information, not ornament. */
+.src{
+  font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--faint); border:1px solid var(--edge); border-radius:5px;
+  padding:3px 7px; white-space:nowrap;
+}
+
+.card{
+  background:var(--glass); border:1px solid var(--edge); border-radius:var(--r);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%);
+  padding:18px; position:relative; overflow:hidden;
+}
+.card::before{content:""; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--edge-strong),transparent)}
+
+/* ---------- KPI strip ---------- */
+/* Six tiles on a three-up grid: two full rows rather than a row of five
+   and an orphan. Falls to two, then one, as the viewport narrows. */
+.kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+@media (max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.kpis{grid-template-columns:1fr}}
+.kpi{
+  background:var(--glass); border:1px solid var(--edge); border-radius:12px;
+  padding:14px 15px; position:relative; overflow:hidden;
+  backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%);
+}
+.kpi .k-lab{font-size:11.5px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; margin-bottom:7px}
+.kpi .k-val{font-size:25px; font-weight:600; letter-spacing:-.025em; line-height:1.1}
+.kpi .k-sub{font-size:12.5px; color:var(--muted); margin-top:5px}
+.kpi .rail{position:absolute; left:0; top:0; bottom:0; width:3px}
+
+/* ---------- facility ladder ---------- */
+.fac-grp{font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); margin:18px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--edge)}
+.fac-grp:first-of-type{margin-top:4px}
+.fac{
+  display:grid; grid-template-columns:200px 1fr 92px 74px; gap:14px; align-items:center;
+  padding:9px 0; border-bottom:1px solid var(--grid);
+}
+.fac:last-child{border-bottom:0}
+.fac-name{font-size:13.5px; font-weight:500}
+.fac-name small{display:block; color:var(--faint); font-size:11.5px; font-weight:400}
+.track{height:19px; border-radius:4px; background:rgba(236,234,230,.07); position:relative; overflow:hidden}
+.fill{position:absolute; left:0; top:0; bottom:0; border-radius:4px}
+.fac-cap,.fac-rate{text-align:right; font-size:13px}
+.fac-cap{color:var(--muted)}
+.rate-chip{
+  display:inline-block; font-size:12px; font-weight:600; padding:2px 7px; border-radius:5px;
+}
+@media (max-width:720px){
+  .fac{grid-template-columns:1fr 78px 66px; gap:8px}
+  .fac .track{grid-column:1/-1; order:3}
+}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto; margin:0 -18px; padding:0 18px}
+table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px}
+th{
+  text-align:right; font-size:11px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; padding:0 0 9px; border-bottom:1px solid var(--edge);
+}
+th:first-child,td:first-child{text-align:left}
+td{padding:9px 0; border-bottom:1px solid var(--grid); text-align:right}
+tbody tr:last-child td{border-bottom:0}
+.metro{display:flex; align-items:center; gap:9px}
+.stripe{width:3px; height:19px; border-radius:2px; flex:none}
+
+/* ---------- charts ---------- */
+.chart{width:100%; height:auto; display:block; overflow:visible}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--muted)}
+.legend span{display:flex; align-items:center; gap:6px}
+.sw{width:11px; height:11px; border-radius:3px; flex:none}
+.sw.line{height:3px; width:16px; border-radius:2px}
+
+.tip{
+  position:fixed; pointer-events:none; z-index:80; opacity:0; transition:opacity .09s;
+  background:var(--glass-raised); border:1px solid var(--edge-strong); border-radius:9px;
+  padding:9px 11px; font-size:12.5px; box-shadow:var(--shadow);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); max-width:270px;
+}
+.tip b{display:block; margin-bottom:4px; font-size:13px}
+.tip .r{display:flex; justify-content:space-between; gap:16px; color:var(--muted)}
+.tip .r span:last-child{color:var(--ink)}
+
+.note{
+  font-size:13px; color:var(--muted); border-left:2px solid var(--od-accent);
+  padding:2px 0 2px 13px; margin-top:16px;
+}
+.note strong{color:var(--ink); font-weight:600}
+
+footer{margin-top:52px; padding-top:22px; border-top:1px solid var(--edge);
+  color:var(--faint); font-size:12.5px}
+footer a{color:var(--muted)}
+.prov{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; margin-top:14px}
+.prov div{font-size:12.5px}
+.prov b{color:var(--muted); display:block; font-size:11px; letter-spacing:.07em;
+  text-transform:uppercase; margin-bottom:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="mast">
+  <div class="mast-in">
+    <span class="tick">OPEN</span>
+    <div>
+      <h1>Opendoor Balance Sheet Telemetry</h1>
+      <p class="sub">Inventory, leverage and market clearance &mdash; built entirely from free public sources</p>
+    </div>
+    <div class="mast-right">
+      <span class="pill live" id="p-live">&#9679; live data</span>
+      <span class="pill" id="p-asof"></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="s-kpi" style="margin-top:28px">
+    <div class="sec-head">
+      <h2>Capital position</h2>
+      <p id="kpi-lede"></p>
+      <span class="src">SEC EDGAR XBRL</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="note" id="kpi-note"></div>
+  </section>
+
+  <section id="s-fac">
+    <div class="sec-head">
+      <h2>Credit facility ladder</h2>
+      <p>Every asset-backed facility with its drawn balance and weighted-average rate. None of this exists in XBRL &mdash; it is parsed from the rendered debt footnote.</p>
+      <span class="src">EDGAR footnote R-file</span>
+    </div>
+    <div class="card">
+      <div id="ladder"></div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="sec-head" style="margin-bottom:8px"><h2 style="font-size:15px">Blended cost of funds</h2></div>
+        <div id="cof"></div>
+      </div>
+      <div class="card">
+        <div class="sec-head" style="margin-bottom:8px"><h2 style="font-size:15px">Senior vs mezzanine</h2></div>
+        <div id="tier"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-bb">
+    <div class="sec-head">
+      <h2>Borrowing base and utilization</h2>
+      <p id="bb-lede"></p>
+      <span class="src">EDGAR footnote R-file</span>
+    </div>
+    <div class="card"><svg class="chart" id="c-bb" viewBox="0 0 900 330" role="img" aria-label="Facility capacity versus drawn debt by quarter"></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:rgba(28,133,232,.22); border:1px solid var(--s1)"></i>Total capacity</span>
+        <span><i class="sw" style="background:var(--s1)"></i>Drawn</span>
+        <span><i class="sw line" style="background:var(--s2)"></i>Utilization %</span>
+      </div>
+    </div>
+    <div class="note" id="bb-note"></div>
+  </section>
+
+  <section id="s-bs">
+    <div class="sec-head">
+      <h2>Inventory against leverage</h2>
+      <p>Real-estate inventory carried on the balance sheet versus total asset-backed debt, by quarter.</p>
+      <span class="src">SEC EDGAR XBRL</span>
+    </div>
+    <div class="card"><svg class="chart" id="c-bs" viewBox="0 0 900 320" role="img" aria-label="Inventory and asset-backed debt by quarter"></svg>
+      <div class="legend">
+        <span><i class="sw line" style="background:var(--s1)"></i>Real-estate inventory</span>
+        <span><i class="sw line" style="background:var(--s2)"></i>Asset-backed debt</span>
+        <span><i class="sw line" style="background:var(--s3)"></i>Unrestricted cash</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-msa">
+    <div class="sec-head">
+      <h2>Market clearance by metro</h2>
+      <p id="msa-lede"></p>
+      <span class="src">Redfin Data Center</span>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table id="t-msa">
+          <thead><tr>
+            <th>Metro</th><th>Months of supply</th><th>vs national</th>
+            <th>Median DOM</th><th>Price cuts</th><th>Sale / list</th><th>Inventory</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:15px">Months of supply &mdash; 3-year path</h2></div>
+        <svg class="chart" id="c-mos" viewBox="0 0 440 260" role="img" aria-label="Months of supply by metro over three years"></svg>
+        <div class="legend" id="l-mos"></div>
+      </div>
+      <div class="card">
+        <div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:15px">Clearance risk</h2></div>
+        <svg class="chart" id="c-risk" viewBox="0 0 440 260" role="img" aria-label="Months of supply against price cut share by metro"></svg>
+        <p style="font-size:12.5px; color:var(--muted); margin:8px 0 0">Up and to the right is slower clearance with deeper discounting. Bubble area is active listings.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-inv"></section>
+
+  <footer>
+    <strong style="color:var(--muted)">How this was built.</strong>
+    Every figure comes from a free, public source &mdash; no paid data vendor, no terminal.
+    The pipeline that produces it replaces Parcl Labs, CoreLogic, Attom and Bloomberg
+    with SEC EDGAR, Redfin Data Center and Opendoor's own published sitemap.
+    <div class="prov">
+      <div><b>Financials</b>SEC EDGAR XBRL <span class="mono">companyfacts</span> API, CIK 1801169. Tags resolved through fallback chains because Opendoor's tag usage changed in 2021.</div>
+      <div><b>Facility detail</b>Rendered debt-footnote tables located via each filing's <span class="mono">FilingSummary.xml</span>. Report numbering shifts between filings, so they are matched by name.</div>
+      <div><b>Market data</b>Redfin Data Center public bulk TSV, filtered to the six Opendoor concentration metros plus a national baseline.</div>
+      <div><b>Inventory</b>Opendoor's published sitemap and the structured data already embedded in each listing page, fetched at one request per second.</div>
+    </div>
+    <p id="foot-note" style="margin-top:16px"></p>
+  </footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const el = (t,c,h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+const NS = "http://www.w3.org/2000/svg";
+const svg = (t,a={}) => { const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; };
+
+const usd = v => v==null ? "—" : (Math.abs(v)>=1e9 ? "$"+(v/1e9).toFixed(2)+"B"
+              : Math.abs(v)>=1e6 ? "$"+(v/1e6).toFixed(0)+"M" : "$"+Math.round(v).toLocaleString());
+const pct = (v,d=1) => v==null ? "—" : (v*100).toFixed(d)+"%";
+const qlab = d => { const [y,m]=d.split("-"); return "Q"+(Math.floor((+m-1)/3)+1)+" '"+y.slice(2); };
+const mlab = d => { const [y,m]=d.split("-");
+  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m-1]+" '"+y.slice(2); };
+const shortMetro = r => r.replace(" metro area","");
+
+/* ---------------- tooltip ---------------- */
+const tip = $("#tip");
+function showTip(e, html){
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = Math.max(8,x)+"px"; tip.style.top = Math.max(8,y)+"px";
+}
+const hideTip = () => tip.style.opacity = 0;
+function hoverable(node, html){
+  node.style.cursor = "crosshair";
+  node.addEventListener("mousemove", e => showTip(e, html));
+  node.addEventListener("mouseleave", hideTip);
+}
+addEventListener("scroll", hideTip, {passive:true});
+
+/* ---------------- header ---------------- */
+$("#p-asof").textContent = "as of " + D.as_of;
+
+/* ---------------- KPI strip ---------------- */
+const bs = D.balance_sheet, last = bs[bs.length-1], prev = bs[bs.length-2];
+const facs = D.facilities, total = facs.find(f => f.facility_name === "TOTAL");
+
+const drawnRated = facs.filter(f => f.wtd_avg_rate != null && f.drawn > 0);
+const drawnSum = drawnRated.reduce((a,f) => a + f.drawn, 0);
+const blended = drawnRated.reduce((a,f) => a + f.drawn * f.wtd_avg_rate, 0) / (drawnSum||1);
+
+const invDelta = (last.inventory_real_estate - prev.inventory_real_estate) / prev.inventory_real_estate;
+
+const kpis = [
+  { lab:"Real-estate inventory", val: usd(last.inventory_real_estate),
+    sub: (invDelta>=0?"+":"")+pct(invDelta,0)+" vs prior quarter", rail:"var(--s1)",
+    tip:{"Carrying value": usd(last.inventory_real_estate),
+         "Prior quarter": usd(prev.inventory_real_estate),
+         "Write-down taken": usd(last.inventory_writedown)} },
+  { lab:"Asset-backed debt", val: usd(last.abs_debt_total),
+    sub: (last.debt_to_inventory).toFixed(2)+"× inventory", rail:"var(--s2)",
+    tip:{"Current": usd(last.abs_debt_current), "Non-current": usd(last.abs_debt_noncurrent),
+         "Debt / inventory": last.debt_to_inventory.toFixed(2)+"×"} },
+  { lab:"Facility headroom", val: usd(total.headroom),
+    sub: pct(total.utilization,1)+" of $"+(total.capacity/1e9).toFixed(2)+"B drawn", rail:"var(--good)",
+    tip:{"Total capacity": usd(total.capacity), "Drawn": usd(total.drawn),
+         "Undrawn headroom": usd(total.headroom)} },
+  { lab:"Blended cost of funds", val: pct(blended,2),
+    sub: drawnRated.length+" facilities carrying a balance", rail:"var(--warn)",
+    tip:{"Drawn-weighted rate": pct(blended,2), "Rated drawn balance": usd(drawnSum)} },
+  { lab:"Unrestricted cash", val: usd(last.cash_unrestricted),
+    sub: usd(last.cash_restricted)+" restricted", rail:"var(--s3)",
+    tip:{"Unrestricted": usd(last.cash_unrestricted), "Restricted": usd(last.cash_restricted)} },
+  { lab:"Converts due within 1yr", val: usd(last.convertible_current),
+    sub: last.liquid_cover_of_current_converts.toFixed(1)+"× covered by cash",
+    rail: last.liquid_cover_of_current_converts < 1.5 ? "var(--crit)" : "var(--good)",
+    tip:{"Current portion": usd(last.convertible_current),
+         "Non-current": usd(last.convertible_noncurrent),
+         "Cash cover": last.liquid_cover_of_current_converts.toFixed(2)+"×"} },
+];
+const kwrap = $("#kpis");
+kpis.forEach(k => {
+  const c = el("div","kpi");
+  c.appendChild(el("div","rail")).style.background = k.rail;
+  c.appendChild(el("div","k-lab", k.lab));
+  c.appendChild(el("div","k-val num", k.val));
+  c.appendChild(el("div","k-sub num", k.sub));
+  hoverable(c, "<b>"+k.lab+"</b>"+Object.entries(k.tip)
+    .map(([a,b])=>'<div class="r"><span>'+a+'</span><span class="num">'+b+'</span></div>').join(""));
+  kwrap.appendChild(c);
+});
+
+$("#kpi-lede").textContent = "Reported " + last.period_end + ", from the most recent 10-Q.";
+$("#kpi-note").innerHTML =
+  "<strong>Inventory grew "+pct(invDelta,0)+" in a single quarter</strong> while drawn debt rose from "
+  + usd(prev.abs_debt_total) + " to " + usd(last.abs_debt_total)
+  + ". After eighteen months of deleveraging, Opendoor is buying again — and funding it on the facilities rather than from cash.";
+
+/* ---------------- facility ladder ---------------- */
+const groups = {};
+facs.filter(f => f.facility_name !== "TOTAL").forEach(f => {
+  const g = f.facility_group || "Programme totals";
+  (groups[g] = groups[g] || []).push(f);
+});
+const order = Object.keys(groups).sort((a,b) => a === "Programme totals" ? -1 : b === "Programme totals" ? 1 : a.localeCompare(b));
+const ladder = $("#ladder");
+order.forEach(g => {
+  ladder.appendChild(el("div","fac-grp", g));
+  groups[g].sort((a,b) => (b.capacity||0)-(a.capacity||0)).forEach(f => {
+    const row = el("div","fac");
+    const util = f.utilization || 0;
+    const isMezz = /mezzanine/i.test(f.facility_group||"") || (f.wtd_avg_rate||0) >= 0.10;
+    const col = isMezz ? "var(--s2)" : "var(--s1)";
+    row.appendChild(el("div","fac-name", f.facility_name +
+      '<small>'+(f.drawn>0 ? usd(f.drawn)+" drawn" : "undrawn")+'</small>'));
+    const tr = el("div","track");
+    const fill = el("div","fill"); fill.style.width = Math.max(util*100,0)+"%"; fill.style.background = col;
+    tr.appendChild(fill); row.appendChild(tr);
+    row.appendChild(el("div","fac-cap num", usd(f.capacity)));
+    const rc = el("div","fac-rate");
+    if (f.wtd_avg_rate != null){
+      const chip = el("span","rate-chip num", pct(f.wtd_avg_rate,2));
+      chip.style.background = f.wtd_avg_rate >= .10 ? "rgba(217,89,38,.18)"
+        : f.wtd_avg_rate > 0 ? "rgba(28,133,232,.16)" : "rgba(236,234,230,.07)";
+      chip.style.color = f.wtd_avg_rate >= .10 ? "var(--s2)" : f.wtd_avg_rate > 0 ? "var(--s1)" : "var(--faint)";
+      rc.appendChild(chip);
+    } else rc.textContent = "—";
+    row.appendChild(rc);
+    hoverable(row, "<b>"+f.facility_name+"</b>"+
+      '<div class="r"><span>Capacity</span><span class="num">'+usd(f.capacity)+'</span></div>'+
+      '<div class="r"><span>Drawn</span><span class="num">'+usd(f.drawn)+'</span></div>'+
+      '<div class="r"><span>Headroom</span><span class="num">'+usd(f.headroom)+'</span></div>'+
+      '<div class="r"><span>Utilization</span><span class="num">'+pct(util,1)+'</span></div>'+
+      (f.wtd_avg_rate!=null?'<div class="r"><span>Rate</span><span class="num">'+pct(f.wtd_avg_rate,2)+'</span></div>':""));
+    ladder.appendChild(row);
+  });
+});
+
+/* ---------------- cost of funds ---------------- */
+const senior = drawnRated.filter(f => f.wtd_avg_rate < .10);
+const mezz   = drawnRated.filter(f => f.wtd_avg_rate >= .10);
+const wavg = a => a.reduce((s,f)=>s+f.drawn*f.wtd_avg_rate,0)/(a.reduce((s,f)=>s+f.drawn,0)||1);
+const sDrawn = senior.reduce((s,f)=>s+f.drawn,0), mDrawn = mezz.reduce((s,f)=>s+f.drawn,0);
+
+$("#cof").innerHTML =
+  '<div class="num" style="font-size:42px; font-weight:600; letter-spacing:-.03em; line-height:1">'+pct(blended,2)+'</div>'+
+  '<p style="color:var(--muted); font-size:13px; margin:8px 0 0">Drawn-weighted average across every facility carrying a balance '+
+  '('+usd(drawnSum)+'). This is the hurdle each inventory dollar has to clear before a holding day is worth taking.</p>';
+
+const tierRows = [
+  {n:"Senior", d:sDrawn, r:wavg(senior), c:"var(--s1)", k:senior.length},
+  {n:"Mezzanine", d:mDrawn, r:wavg(mezz), c:"var(--s2)", k:mezz.length},
+];
+const maxD = Math.max(...tierRows.map(t=>t.d));
+$("#tier").innerHTML = tierRows.map(t =>
+  '<div style="margin-bottom:14px">'+
+    '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px">'+
+      '<span>'+t.n+' <span style="color:var(--faint)">&middot; '+t.k+' facilities</span></span>'+
+      '<span class="num" style="font-weight:600; color:'+t.c+'">'+pct(t.r,2)+'</span></div>'+
+    '<div class="track"><div class="fill" style="width:'+(t.d/maxD*100)+'%; background:'+t.c+'"></div></div>'+
+    '<div class="num" style="font-size:12px; color:var(--muted); margin-top:4px">'+usd(t.d)+' drawn</div>'+
+  '</div>').join("") +
+  '<p style="color:var(--muted); font-size:12.5px; margin:0">Mezzanine paper costs '+
+  ((wavg(mezz)/wavg(senior)).toFixed(1))+'× the senior rate. Its share of the drawn balance is the single '+
+  'biggest swing factor in blended funding cost.</p>';
+
+/* ---------------- chart helpers ---------------- */
+function axes(s, x0,y0,x1,y1, yticks, fmt, xlabels){
+  yticks.forEach(t => {
+    const y = t.y;
+    s.appendChild(svg("line",{x1:x0,x2:x1,y1:y,y2:y,stroke:"var(--grid)","stroke-width":1}));
+    const tx = svg("text",{x:x0-9,y:y+4,"text-anchor":"end",fill:"var(--muted)","font-size":11});
+    tx.setAttribute("class","num"); tx.textContent = fmt(t.v); s.appendChild(tx);
+  });
+  s.appendChild(svg("line",{x1:x0,x2:x1,y1:y1,y2:y1,stroke:"var(--edge-strong)","stroke-width":1}));
+  (xlabels||[]).forEach(l => {
+    const tx = svg("text",{x:l.x,y:y1+19,"text-anchor":"middle",fill:"var(--muted)","font-size":11});
+    tx.setAttribute("class","num"); tx.textContent = l.t; s.appendChild(tx);
+  });
+}
+const ticks = (min,max,n,y0,y1) => Array.from({length:n+1},(_,i)=>{
+  const v = min + (max-min)*i/n; return {v, y: y1 - (v-min)/(max-min)*(y1-y0)};
+});
+
+/* ---------------- borrowing base chart ---------------- */
+(function(){
+  const s = $("#c-bb"), H = D.facility_history;
+  // x1 stops well short of the viewBox edge so the right-hand utilization
+  // axis has its own lane and never sits on top of the last bar.
+  const x0=64,y0=22,x1=818,y1=274;
+  const maxCap = Math.max(...H.map(d=>d.capacity))*1.06;
+  const X = i => x0 + i*(x1-x0)/(H.length-1);
+  const Y = v => y1 - v/maxCap*(y1-y0);
+  const YU = u => y1 - u/0.40*(y1-y0);
+
+  axes(s,x0,y0,x1,y1, ticks(0,maxCap,4,y0,y1), v=>"$"+(v/1e9).toFixed(1)+"B",
+       H.map((d,i)=>({x:X(i), t:qlab(d.period_end)})));
+
+  // capacity band
+  let p = "M"+X(0)+","+Y(H[0].capacity);
+  H.forEach((d,i)=> p += "L"+X(i)+","+Y(d.capacity));
+  p += "L"+X(H.length-1)+","+y1+"L"+x0+","+y1+"Z";
+  s.appendChild(svg("path",{d:p, fill:"rgba(28,133,232,.14)", stroke:"none"}));
+  let pc = "M"+X(0)+","+Y(H[0].capacity);
+  H.forEach((d,i)=> pc += "L"+X(i)+","+Y(d.capacity));
+  s.appendChild(svg("path",{d:pc, fill:"none", stroke:"var(--s1)","stroke-width":1.5,
+    "stroke-dasharray":"4 3", "stroke-linejoin":"round"}));
+
+  // drawn bars — 2px surface gap between neighbours
+  const bw = Math.min(34,(x1-x0)/H.length - 8);
+  H.forEach((d,i)=>{
+    const h = y1-Y(d.drawn);
+    const r = svg("rect",{x:X(i)-bw/2, y:Y(d.drawn), width:bw, height:Math.max(h,2),
+      fill:"var(--s1)", rx:4});
+    hoverable(r, "<b>"+qlab(d.period_end)+"</b>"+
+      '<div class="r"><span>Capacity</span><span class="num">'+usd(d.capacity)+'</span></div>'+
+      '<div class="r"><span>Drawn</span><span class="num">'+usd(d.drawn)+'</span></div>'+
+      '<div class="r"><span>Headroom</span><span class="num">'+usd(d.headroom)+'</span></div>'+
+      '<div class="r"><span>Utilization</span><span class="num">'+pct(d.utilization,1)+'</span></div>');
+    s.appendChild(r);
+  });
+
+  // utilization line on its own right-hand scale, drawn as a distinct dashed form
+  let pu = "";
+  H.forEach((d,i)=> pu += (i?"L":"M")+X(i)+","+YU(d.utilization));
+  s.appendChild(svg("path",{d:pu, fill:"none", stroke:"var(--s2)","stroke-width":2,
+    "stroke-linejoin":"round","stroke-linecap":"round"}));
+  H.forEach((d,i)=>{
+    s.appendChild(svg("circle",{cx:X(i), cy:YU(d.utilization), r:4.5, fill:"var(--s2)",
+      stroke:"#0A1020","stroke-width":2}));
+  });
+  // right axis for utilization
+  [0,.1,.2,.3,.4].forEach(u=>{
+    const t = svg("text",{x:x1+34,y:YU(u)+4,"text-anchor":"start",fill:"var(--s2)","font-size":11});
+    t.setAttribute("class","num"); t.textContent = (u*100).toFixed(0)+"%"; s.appendChild(t);
+  });
+  // label the endpoints only
+  const lastH = H[H.length-1];
+  const lt = svg("text",{x:X(H.length-1), y:Y(lastH.drawn)-11,"text-anchor":"end",
+    fill:"var(--ink)","font-size":12,"font-weight":600});
+  lt.setAttribute("class","num"); lt.textContent = usd(lastH.drawn); s.appendChild(lt);
+
+  const lo = H.reduce((a,b)=> b.utilization<a.utilization?b:a);
+  $("#bb-lede").textContent = "Ten quarters of capacity and drawn balance, recovered from the debt footnote of each filing.";
+  $("#bb-note").innerHTML = "<strong>Utilization bottomed at "+pct(lo.utilization,1)+" in "+qlab(lo.period_end)+
+    "</strong> and has since climbed to "+pct(lastH.utilization,1)+
+    ". Capacity itself is not the constraint — "+usd(lastH.headroom)+" remains undrawn. The binding question is what each drawn dollar costs.";
+})();
+
+/* ---------------- inventory vs debt ---------------- */
+(function(){
+  const s = $("#c-bs");
+  const H = bs.filter(d => d.inventory_real_estate != null);
+  const x0=64,y0=20,x1=876,y1=264;
+  const max = Math.max(...H.map(d=>Math.max(d.inventory_real_estate||0,d.abs_debt_total||0,d.cash_unrestricted||0)))*1.08;
+  const X = i => x0 + i*(x1-x0)/(H.length-1);
+  const Y = v => y1 - v/max*(y1-y0);
+  const xl = H.map((d,i)=>({x:X(i), t:qlab(d.period_end), i})).filter(o=>o.i%4===0);
+  axes(s,x0,y0,x1,y1, ticks(0,max,4,y0,y1), v=>"$"+(v/1e9).toFixed(0)+"B", xl);
+
+  const series = [
+    {k:"inventory_real_estate", c:"var(--s1)", n:"Inventory"},
+    {k:"abs_debt_total",        c:"var(--s2)", n:"Asset-backed debt"},
+    {k:"cash_unrestricted",     c:"var(--s3)", n:"Unrestricted cash"},
+  ];
+  series.forEach(ser=>{
+    let p="";
+    H.forEach((d,i)=>{ const v=d[ser.k]; if(v==null)return; p += (p?"L":"M")+X(i)+","+Y(v); });
+    s.appendChild(svg("path",{d:p, fill:"none", stroke:ser.c, "stroke-width":2,
+      "stroke-linejoin":"round","stroke-linecap":"round"}));
+    const lastI = H.length-1, lv = H[lastI][ser.k];
+    if (lv!=null) s.appendChild(svg("circle",{cx:X(lastI), cy:Y(lv), r:4.5, fill:ser.c,
+      stroke:"#0A1020","stroke-width":2}));
+  });
+  // hover columns
+  H.forEach((d,i)=>{
+    const r = svg("rect",{x:X(i)-(x1-x0)/H.length/2, y:y0, width:(x1-x0)/H.length,
+      height:y1-y0, fill:"transparent"});
+    hoverable(r, "<b>"+qlab(d.period_end)+"</b>"+
+      series.map(ser=>'<div class="r"><span>'+ser.n+'</span><span class="num">'+usd(d[ser.k])+'</span></div>').join("")+
+      (d.tangible_net_worth!=null?'<div class="r"><span>Tangible net worth</span><span class="num">'+usd(d.tangible_net_worth)+'</span></div>':""));
+    s.appendChild(r);
+  });
+})();
+
+/* ---------------- MSA table ---------------- */
+(function(){
+  const tb = $("#t-msa tbody");
+  const sev = m => m.months_of_supply > 6 ? "var(--crit)" : m.months_of_supply > 4 ? "var(--warn)" : "var(--good)";
+  D.msa.forEach(m=>{
+    const tr = el("tr");
+    tr.appendChild(el("td",null,'<div class="metro"><i class="stripe" style="background:'+sev(m)+'"></i>'+shortMetro(m.region)+'</div>'));
+    [[m.months_of_supply.toFixed(2)],
+     [(m.delta_mos>=0?"+":"")+m.delta_mos.toFixed(2), m.delta_mos>0?"var(--warn)":"var(--muted)"],
+     [m.median_dom.toFixed(0)],
+     [pct(m.price_drops,1)],
+     [m.avg_sale_to_list.toFixed(3), m.avg_sale_to_list<0.98?"var(--warn)":null],
+     [Math.round(m.inventory).toLocaleString()]
+    ].forEach(([v,c])=>{
+      const td = el("td","num",v); if(c) td.style.color=c; tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  const worst = D.msa[0];
+  $("#msa-lede").textContent = "Rolling month ending " + D.msa_period +
+    ". Six Opendoor concentration metros (Redfin splits Dallas and Fort Worth) against the national baseline.";
+})();
+
+/* ---------------- MOS path ---------------- */
+(function(){
+  const s = $("#c-mos"), L = $("#l-mos");
+  const byR = {};
+  D.msa_series.forEach(r => (byR[r.region] = byR[r.region]||[]).push(r));
+  // Four series max on an adjacent-pair form; show the widest spread, fold the rest.
+  const names = Object.keys(byR).sort((a,b)=>{
+    const la = byR[a][byR[a].length-1].months_of_supply, lb = byR[b][byR[b].length-1].months_of_supply;
+    return lb-la;
+  });
+  const show = names.slice(0,3), rest = names.slice(3);
+  const cols = ["var(--s1)","var(--s2)","var(--s3)"];
+  const x0=44,y0=14,x1=406,y1=212;
+  const all = D.msa_series.map(r=>r.months_of_supply).filter(v=>v!=null);
+  const max = Math.max(...all)*1.08, min = 0;
+  const per = byR[names[0]].length;
+  const X = i => x0 + i*(x1-x0)/(per-1);
+  const Y = v => y1 - (v-min)/(max-min)*(y1-y0);
+  const xs = byR[names[0]].map((r,i)=>({x:X(i), t:mlab(r.period_begin), i}))
+    .filter(o=>o.i%9===0);
+  axes(s,x0,y0,x1,y1, ticks(min,max,4,y0,y1), v=>v.toFixed(1), xs);
+
+  // folded "Other" band first, so named series sit above it
+  if (rest.length){
+    let hi="", lo=[];
+    for(let i=0;i<per;i++){
+      const vals = rest.map(n=>byR[n][i] && byR[n][i].months_of_supply).filter(v=>v!=null);
+      if(!vals.length) continue;
+      hi += (hi?"L":"M")+X(i)+","+Y(Math.max(...vals));
+      lo.push([X(i),Y(Math.min(...vals))]);
+    }
+    const band = hi + lo.reverse().map(p=>"L"+p[0]+","+p[1]).join("") + "Z";
+    s.appendChild(svg("path",{d:band, fill:"rgba(154,165,191,.16)", stroke:"none"}));
+  }
+  show.forEach((n,k)=>{
+    let p="";
+    byR[n].forEach((r,i)=>{ if(r.months_of_supply==null)return; p += (p?"L":"M")+X(i)+","+Y(r.months_of_supply); });
+    s.appendChild(svg("path",{d:p, fill:"none", stroke:cols[k],"stroke-width":2,
+      "stroke-linejoin":"round","stroke-linecap":"round"}));
+    const lastR = byR[n][byR[n].length-1];
+    s.appendChild(svg("circle",{cx:X(per-1), cy:Y(lastR.months_of_supply), r:4, fill:cols[k],
+      stroke:"#0A1020","stroke-width":2}));
+  });
+  // hover columns across all metros
+  for(let i=0;i<per;i++){
+    const r = svg("rect",{x:X(i)-(x1-x0)/per/2, y:y0, width:(x1-x0)/per, height:y1-y0, fill:"transparent"});
+    const d0 = byR[names[0]][i];
+    hoverable(r, "<b>"+mlab(d0.period_begin)+"</b>"+
+      names.map(n=>{ const v=byR[n][i]; return '<div class="r"><span>'+shortMetro(n)+
+        '</span><span class="num">'+(v&&v.months_of_supply!=null?v.months_of_supply.toFixed(2):"—")+'</span></div>';}).join(""));
+    s.appendChild(r);
+  }
+  L.innerHTML = show.map((n,k)=>'<span><i class="sw line" style="background:'+cols[k]+'"></i>'+shortMetro(n)+'</span>').join("")
+    + (rest.length?'<span><i class="sw" style="background:rgba(154,165,191,.3)"></i>Other '+rest.length+' metros (range)</span>':"");
+})();
+
+/* ---------------- clearance risk scatter ---------------- */
+(function(){
+  const s = $("#c-risk"), M = D.msa;
+  const x0=48,y0=16,x1=404,y1=208;
+  const xs = M.map(m=>m.months_of_supply), ys = M.map(m=>m.price_drops);
+  const xmin=Math.min(...xs)*0.94, xmax=Math.max(...xs)*1.06;
+  const ymin=Math.min(...ys)*0.92, ymax=Math.max(...ys)*1.08;
+  const X = v => x0 + (v-xmin)/(xmax-xmin)*(x1-x0);
+  const Y = v => y1 - (v-ymin)/(ymax-ymin)*(y1-y0);
+  const yt = ticks(ymin,ymax,3,y0,y1);
+  axes(s,x0,y0,x1,y1, yt, v=>(v*100).toFixed(0)+"%",
+    ticks(xmin,xmax,4,y0,y1).map(t=>({x:X(t.v), t:t.v.toFixed(1)})));
+  const xa = svg("text",{x:(x0+x1)/2,y:y1+38,"text-anchor":"middle",fill:"var(--muted)","font-size":11});
+  xa.textContent="Months of supply"; s.appendChild(xa);
+
+  // national reference line
+  const natl = M[0].mos_national;
+  if (natl >= xmin && natl <= xmax){
+    s.appendChild(svg("line",{x1:X(natl),x2:X(natl),y1:y0,y2:y1,stroke:"var(--faint)",
+      "stroke-width":1,"stroke-dasharray":"3 3"}));
+    const t = svg("text",{x:X(natl),y:y0-3,"text-anchor":"middle",fill:"var(--faint)","font-size":10});
+    t.textContent="national"; s.appendChild(t);
+  }
+  const rmax = Math.max(...M.map(m=>m.inventory));
+  // Four of these metros sit within 0.2 months of one another, so a label
+  // parked above every bubble overlaps. Keep the boxes we have placed and
+  // flip or nudge each new one until it is clear.
+  const placed = [];
+  function place(cx, cy, r, w){
+    const h = 13;
+    const cands = [cy-r-5, cy+r+12, cy-r-18, cy+r+25];
+    for (const y of cands){
+      const box = {x1:cx-w/2, x2:cx+w/2, y1:y-h, y2:y};
+      if (!placed.some(p => box.x1 < p.x2 && box.x2 > p.x1 && box.y1 < p.y2 && box.y2 > p.y1)
+          && box.y1 > 2 && box.y2 < y1 + 22){
+        placed.push(box); return y;
+      }
+    }
+    const y = cands[0]; placed.push({x1:cx-w/2, x2:cx+w/2, y1:y-h, y2:y}); return y;
+  }
+  M.forEach(m=>{
+    const r = 6 + Math.sqrt(m.inventory/rmax)*13;
+    const sevc = m.months_of_supply>6?"var(--crit)":m.months_of_supply>4?"var(--warn)":"var(--s1)";
+    const c = svg("circle",{cx:X(m.months_of_supply), cy:Y(m.price_drops), r,
+      fill:sevc, "fill-opacity":.42, stroke:sevc, "stroke-width":2});
+    hoverable(c, "<b>"+shortMetro(m.region)+"</b>"+
+      '<div class="r"><span>Months of supply</span><span class="num">'+m.months_of_supply.toFixed(2)+'</span></div>'+
+      '<div class="r"><span>vs national</span><span class="num">'+(m.delta_mos>=0?"+":"")+m.delta_mos.toFixed(2)+'</span></div>'+
+      '<div class="r"><span>Price cuts</span><span class="num">'+pct(m.price_drops,1)+'</span></div>'+
+      '<div class="r"><span>Median DOM</span><span class="num">'+m.median_dom.toFixed(0)+'</span></div>'+
+      '<div class="r"><span>Active listings</span><span class="num">'+Math.round(m.inventory).toLocaleString()+'</span></div>');
+    s.appendChild(c);
+    // direct label: identity never rides on colour alone
+    const name = shortMetro(m.region).split(",")[0];
+    const ly = place(X(m.months_of_supply), Y(m.price_drops), r, name.length*5.6);
+    const t = svg("text",{x:X(m.months_of_supply), y:ly,"text-anchor":"middle",
+      fill:"var(--ink)","font-size":10.5});
+    t.textContent = name; s.appendChild(t);
+  });
+})();
+
+/* ---------------- inventory section (listings) ---------------- */
+(function(){
+  const host = $("#s-inv");
+  if (!D.listing_count){
+    host.innerHTML =
+      '<div class="sec-head"><h2>Live inventory</h2>'+
+      '<p>The listing sweep had not completed when this snapshot was built.</p>'+
+      '<span class="src">Opendoor sitemap</span></div>'+
+      '<div class="card"><p style="margin:0; color:var(--muted); font-size:13.5px">'+
+      'Per-property aging, price-cut depth and the survival curve populate here once a full '+
+      'sweep lands. Cut depth is measured against the first price this pipeline observed, because '+
+      'Opendoor reports no original list price while a home is still active.</p></div>';
+    return;
+  }
+  const L = D.listing_msa.filter(r=>r.msa_key!=="other");
+  const totalListings = D.listing_msa.reduce((a,r)=>a+Number(r.listings),0);
+  const inFocus = L.reduce((a,r)=>a+Number(r.listings),0);
+  const NAMES = {phoenix:"Phoenix",atlanta:"Atlanta",dfw:"Dallas–Fort Worth",
+                 charlotte:"Charlotte",tampa:"Tampa",las_vegas:"Las Vegas"};
+
+  host.innerHTML =
+    '<div class="sec-head"><h2>Live inventory</h2>'+
+    '<p>'+totalListings.toLocaleString()+' active listings swept from Opendoor’s own sitemap, '+
+    inFocus.toLocaleString()+' of them inside the six concentration metros.</p>'+
+    '<span class="src">Opendoor sitemap</span></div>'+
+    '<div class="grid-2">'+
+      '<div class="card"><div class="sec-head" style="margin-bottom:6px">'+
+        '<h2 style="font-size:15px">Days on market &mdash; distribution</h2></div>'+
+        '<svg class="chart" id="c-dom" viewBox="0 0 440 250"></svg>'+
+        '<p style="font-size:12.5px;color:var(--muted);margin:8px 0 0" id="dom-note"></p></div>'+
+      '<div class="card"><div class="sec-head" style="margin-bottom:6px">'+
+        '<h2 style="font-size:15px">Holding-risk buckets</h2></div>'+
+        '<div id="aging"></div>'+
+        '<p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">Homes past 90 days carry '+
+        'elevated lower-of-cost-or-net-realizable-value write-down risk under GAAP.</p></div>'+
+    '</div>'+
+    '<div class="card" style="margin-top:16px"><div class="tbl-wrap"><table id="t-inv">'+
+      '<thead><tr><th>Metro</th><th>Active listings</th><th>Median DOM</th>'+
+      '<th>Median list</th><th>Avg $/sqft</th><th>Aggregate list value</th></tr></thead>'+
+      '<tbody></tbody></table></div></div>';
+
+  // DOM histogram
+  (function(){
+    const s = $("#c-dom"), B = D.dom_dist.filter(b=>b.b!=null);
+    const x0=44,y0=14,x1=424,y1=204;
+    const max = Math.max(...B.map(b=>Number(b.n)))*1.1;
+    const W = (x1-x0)/B.length;
+    axes(s,x0,y0,x1,y1, ticks(0,max,4,y0,y1), v=>Math.round(v),
+      B.map((b,i)=>({x:x0+i*W+W/2, t:b.lo})).filter((_,i)=>i%5===0));
+    B.forEach((b,i)=>{
+      const n=Number(b.n), h=(n/max)*(y1-y0);
+      const mid=(Number(b.lo)+Number(b.hi))/2;
+      const c = mid>=270?"var(--crit)":mid>=180?"var(--warn)":mid>=90?"var(--s2)":"var(--s1)";
+      const r = svg("rect",{x:x0+i*W+1, y:y1-h, width:Math.max(W-2,1), height:Math.max(h,1), fill:c, rx:3});
+      hoverable(r, "<b>"+b.lo+"–"+b.hi+" days</b>"+
+        '<div class="r"><span>Listings</span><span class="num">'+n+'</span></div>');
+      s.appendChild(r);
+    });
+    const xa = svg("text",{x:(x0+x1)/2,y:y1+38,"text-anchor":"middle",fill:"var(--muted)","font-size":11});
+    xa.textContent="Days on market"; s.appendChild(xa);
+    const over90 = D.aging.filter(a=>a.age_bucket!=="000-089").reduce((a,b)=>a+Number(b.listings),0);
+    const tot = D.aging.reduce((a,b)=>a+Number(b.listings),0);
+    $("#dom-note").textContent = (over90/tot*100).toFixed(1)+"% of active inventory has been listed longer than 90 days.";
+  })();
+
+  // aging buckets
+  (function(){
+    const LAB={"000-089":"Under 90 days","090-179":"90–179 days",
+               "180-269":"180–269 days","270-plus":"270 days and over"};
+    const COL={"000-089":"var(--s1)","090-179":"var(--s2)","180-269":"var(--warn)","270-plus":"var(--crit)"};
+    const tot = D.aging.reduce((a,b)=>a+Number(b.listings),0);
+    $("#aging").innerHTML = D.aging.map(a=>{
+      const n=Number(a.listings), sh=n/tot;
+      return '<div style="margin-bottom:12px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">'+
+        '<span>'+LAB[a.age_bucket]+'</span><span class="num" style="color:'+COL[a.age_bucket]+
+        ';font-weight:600">'+n.toLocaleString()+' &middot; '+(sh*100).toFixed(1)+'%</span></div>'+
+        '<div class="track"><div class="fill" style="width:'+(sh*100)+'%;background:'+COL[a.age_bucket]+'"></div></div>'+
+        '<div class="num" style="font-size:12px;color:var(--muted);margin-top:4px">'+usd(Number(a.value))+' list value</div>'+
+      '</div>';
+    }).join("");
+  })();
+
+  // per-metro table
+  (function(){
+    const tb = $("#t-inv tbody");
+    D.listing_msa.forEach(r=>{
+      const tr = el("tr");
+      const nm = NAMES[r.msa_key] || "Outside target metros";
+      tr.appendChild(el("td",null,'<div class="metro"><i class="stripe" style="background:'+
+        (r.msa_key==="other"?"var(--faint)":"var(--s1)")+'"></i>'+nm+'</div>'));
+      [Number(r.listings).toLocaleString(),
+       r.median_dom!=null?Number(r.median_dom).toFixed(0):"—",
+       usd(Number(r.median_price)),
+       r.avg_ppsf!=null?"$"+Number(r.avg_ppsf).toFixed(0):"—",
+       usd(Number(r.total_value))].forEach(v=>tr.appendChild(el("td","num",v)));
+      tb.appendChild(tr);
+    });
+  })();
+})();
+
+/* ---------------- footer note ---------------- */
+$("#foot-note").innerHTML =
+  "Financial figures are as reported for " + last.period_end +
+  "; market data is the rolling month ending " + D.msa_period +
+  "; inventory was swept on " + D.as_of + ". " +
+  (D.parse_exceptions
+    ? D.parse_exceptions + " listing URLs could not be fetched — Opendoor’s sitemap publishes them with an " +
+      "empty address slug. They are recorded in the pipeline’s exception table rather than dropped silently."
+    : "No parse exceptions were recorded.") +
+  " This page is an analytical exercise built from public filings and public market data. It is not investment advice.";
+</script>

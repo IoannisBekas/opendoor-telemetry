@@ -1,0 +1,81 @@
+# Target market roster for Opendoor balance-sheet concentration tracking.
+#
+# All `redfin_metro` values were verified against the live
+# redfin_metro_market_tracker.tsv000.gz REGION column. Match them EXACTLY:
+#   * "Las Vegas, NM metro area" also exists -> never substring-match "Las Vegas".
+#   * Redfin splits the Dallas-Fort Worth-Arlington CBSA into two separate
+#     metros ("Dallas, TX" and "Fort Worth, TX"). Both are listed; the
+#     aggregate is recomputed downstream, weighted by HOMES_SOLD.
+#
+# `opendoor_slug` values were verified against
+# https://www.opendoor.com/sitemaps/homes.xml
+
+markets:
+  - key: phoenix
+    cbsa_name: "Phoenix-Mesa-Chandler, AZ"
+    redfin_metro: ["Phoenix, AZ metro area"]
+    opendoor_slug: phoenix
+    state: AZ
+    centroid: [33.4484, -112.0740]
+    radius_km: 85
+
+  - key: atlanta
+    cbsa_name: "Atlanta-Sandy Springs-Alpharetta, GA"
+    redfin_metro: ["Atlanta, GA metro area"]
+    opendoor_slug: atlanta
+    state: GA
+    centroid: [33.7490, -84.3880]
+    radius_km: 85
+
+  - key: dfw
+    cbsa_name: "Dallas-Fort Worth-Arlington, TX"
+    redfin_metro: ["Dallas, TX metro area", "Fort Worth, TX metro area"]
+    opendoor_slug: dallas
+    state: TX
+    centroid: [32.8500, -97.0500]
+    radius_km: 95
+
+  - key: charlotte
+    cbsa_name: "Charlotte-Concord-Gastonia, NC-SC"
+    redfin_metro: ["Charlotte, NC metro area"]
+    opendoor_slug: charlotte
+    state: NC
+    centroid: [35.2271, -80.8431]
+    radius_km: 75
+
+  - key: tampa
+    cbsa_name: "Tampa-St. Petersburg-Clearwater, FL"
+    redfin_metro: ["Tampa, FL metro area"]
+    opendoor_slug: tampa
+    state: FL
+    centroid: [27.9506, -82.4572]
+    radius_km: 75
+
+  - key: las_vegas
+    cbsa_name: "Las Vegas-Henderson-Paradise, NV"
+    redfin_metro: ["Las Vegas, NV metro area"]
+    opendoor_slug: las_vegas
+    state: NV
+    centroid: [36.1699, -115.1398]
+    radius_km: 65
+
+# National baseline rows retained for delta-vs-national metrics.
+baselines:
+  region_types: ["national"]
+
+# FRED series pulled by fred_macro.py
+fred_series:
+  MORTGAGE30US: 30Y fixed mortgage rate (Freddie Mac PMMS, weekly)
+  DGS10: 10Y US Treasury constant maturity (daily)
+  SOFR: Secured Overnight Financing Rate (daily)
+  CSUSHPINSA: Case-Shiller US National HPI (monthly, 2mo lag)
+  HOUST: Housing starts (monthly)
+  PERMIT: Building permits (monthly)
+  MSPUS: Median sales price of houses sold (quarterly)
+  MORTGAGE15US: 15Y fixed mortgage rate (weekly)
+
+# Computed spreads written back into macro_ts_metrics
+derived_series:
+  PRIMARY_SECONDARY_SPREAD:
+    minuend: MORTGAGE30US
+    subtrahend: DGS10
